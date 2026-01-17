@@ -1,0 +1,10 @@
+.main-layout {
+  display: flex;
+  padding: 24px;
+  gap: 24px;
+}
+
+.content {
+  flex: 1;
+  text-align: center;
+}
