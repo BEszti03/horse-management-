@@ -1,42 +1,53 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import "./Menu.css";
 
 function Menu() {
   const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  // Kattintás a menün kívül -> zárjon be
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+  // ESC lenyomása -> zárjon be
+    function handleEsc(event) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, []);
 
   return (
-    <div style={{ position: "relative" }}>
-      <button onClick={() => setOpen(!open)}>
+    <div className="menu" ref={containerRef}>
+      <button className="menu__button" onClick={() => setOpen((v) => !v)}>
         Menü
       </button>
 
       {open && (
-        <div style={styles.dropdown}>
-          <div style={styles.item}>Felhasználó adatok</div>
-          <div style={styles.item}>Ló adatok</div>
-          <div style={styles.item}>Naptár</div>
+        <div className="menu__dropdown">
+          <Link className="menu__item" to="/profile" onClick={() => setOpen(false)}>
+            Felhasználó adatok
+          </Link>
+          <Link className="menu__item" to="/horses" onClick={() => setOpen(false)}>
+            Ló adatok
+          </Link>
+          <Link className="menu__item" to="/calendar" onClick={() => setOpen(false)}>
+            Naptár
+          </Link>
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  dropdown: {
-    position: "absolute",
-    top: "40px",
-    right: 0,
-    background: "#fff",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-    width: "180px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-    zIndex: 1000
-  },
-  item: {
-    padding: "10px",
-    cursor: "pointer",
-    borderBottom: "1px solid #eee"
-  }
-};
 
 export default Menu;
