@@ -8,3 +8,12 @@
   flex: 1;
   text-align: center;
 }
+.backend-status {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: #2e7d32;
+  background-color: #e8f5e9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
