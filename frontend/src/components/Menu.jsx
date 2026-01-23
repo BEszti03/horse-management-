@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Menu.css";
 
+
 function Menu() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);

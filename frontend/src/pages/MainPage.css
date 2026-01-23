@@ -1,0 +1,51 @@
+.mainpage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.mainpage__card {
+  width: 100%;
+  max-width: 460px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 24px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+.mainpage__title {
+  text-align: center;
+  margin: 0 0 6px 0;
+}
+
+.mainpage__subtitle {
+  text-align: center;
+  color: #555;
+  margin: 0 0 18px 0;
+}
+
+.mainpage__tabs {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.mainpage__tab {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  cursor: pointer;
+}
+
+.mainpage__tab.active {
+  background: #fff;
+  border-bottom: 2px solid #333;
+  font-weight: bold;
+}
+
+.mainpage__content {
+  margin-top: 8px;
+}

@@ -1,35 +1,12 @@
-.menu {
-  position: relative;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #ddd;
 }
 
-.menu__button {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  background: white;
-  cursor: pointer;
-}
-
-.menu__dropdown {
-  position: absolute;
-  top: 44px;
-  right: 0;
-  width: 190px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  overflow: hidden;
-  z-index: 1000;
-}
-
-.menu__item {
-  display: block;
-  padding: 10px 12px;
-  text-decoration: none;
-  color: #111;
-}
-
-.menu__item:hover {
-  background: #f4f4f4;
+.logo {
+  font-weight: bold;
+  font-size: 18px;
 }
