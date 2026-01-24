@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 
 function Register({ embedded = false, onSwitchTab }) {
@@ -9,24 +9,34 @@ function Register({ embedded = false, onSwitchTab }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
-  const [error, setError] = useState("");
+
+  // mezőnkénti hibák
+  const [errors, setErrors] = useState({});
+
+  function validate() {
+    const nextErrors = {};
+
+    if (!name.trim()) nextErrors.name = "A név megadása kötelező.";
+    if (!email.trim()) nextErrors.email = "Az email megadása kötelező.";
+    if (!password.trim()) nextErrors.password = "A jelszó megadása kötelező.";
+    if (!password2.trim()) nextErrors.password2 = "A jelszó megerősítése kötelező.";
+
+    if (password && password2 && password !== password2) {
+      nextErrors.password = "A két jelszó nem egyezik.";
+    }
+
+    return nextErrors;
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
-    setError("");
 
-    if (!name.trim() || !email.trim() || !password.trim() || !password2.trim()) {
-      setError("Minden mező kitöltése kötelező.");
-      return;
-    }
+    const nextErrors = validate();
+    setErrors(nextErrors);
 
-    if (password !== password2) {
-      setError("A két jelszó nem egyezik.");
-      return;
-    }
+    if (Object.keys(nextErrors).length > 0) return;
 
     // MVP "register" (később backend)
-    // Siker után: vissza loginra
     if (embedded) {
       onSwitchTab?.("login");
     } else {
@@ -39,72 +49,71 @@ function Register({ embedded = false, onSwitchTab }) {
       <h2 className="auth__title">Regisztráció</h2>
       <p className="auth__subtitle">Hozz létre fiókot a használathoz</p>
 
-      {error && <div className="auth__error">{error}</div>}
-
       <form onSubmit={handleSubmit} className="auth__form">
         <label className="auth__label">
           Név
           <input
-            className="auth__input"
+            className={`auth__input ${errors.name ? "auth__input--error" : ""}`}
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              setErrors((prev) => ({ ...prev, name: "" }));
+            }}
             placeholder="pl. Kovács Anna"
           />
+          {errors.name && <div className="auth__fieldError">{errors.name}</div>}
         </label>
 
         <label className="auth__label">
           Email
           <input
-            className="auth__input"
+            className={`auth__input ${errors.email ? "auth__input--error" : ""}`}
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setErrors((prev) => ({ ...prev, email: "" }));
+            }}
             placeholder="pl. anna@email.hu"
           />
+          {errors.email && <div className="auth__fieldError">{errors.email}</div>}
         </label>
 
         <label className="auth__label">
           Jelszó
           <input
-            className="auth__input"
+            className={`auth__input ${errors.password ? "auth__input--error" : ""}`}
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setErrors((prev) => ({ ...prev, password: "" }));
+            }}
             placeholder="••••••••"
           />
+          {errors.password && <div className="auth__fieldError">{errors.password}</div>}
         </label>
 
         <label className="auth__label">
           Jelszó megerősítése
           <input
-            className="auth__input"
+            className={`auth__input ${errors.password2 ? "auth__input--error" : ""}`}
             type="password"
             value={password2}
-            onChange={(e) => setPassword2(e.target.value)}
+            onChange={(e) => {
+              setPassword2(e.target.value);
+              setErrors((prev) => ({ ...prev, password2: "" }));
+            }}
             placeholder="••••••••"
           />
+          {errors.password2 && <div className="auth__fieldError">{errors.password2}</div>}
         </label>
 
         <button className="auth__button" type="submit">
           Regisztráció
         </button>
       </form>
-
-      <div className="auth__footer">
-        Van már fiókod?{" "}
-        {embedded ? (
-          <button
-            type="button"
-            className="auth__linkButton"
-            onClick={() => onSwitchTab?.("login")}
-          >
-            Bejelentkezés
-          </button>
-        ) : (
-          <Link to="/login">Bejelentkezés</Link>
-        )}
-      </div>
     </>
   );
 

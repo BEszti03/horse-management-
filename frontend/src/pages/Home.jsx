@@ -23,7 +23,7 @@ function Home() {
         <section className="content">
           <h1>Hello Felhasználó!</h1>
 
-          {/* Backend státusz – nem bontja meg a layoutot */}
+          {/* Backend státusz – teszteléshez */}
           {backendMessage && (
             <p className="backend-status">
               {backendMessage}

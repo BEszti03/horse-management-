@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 
 function Login({ embedded = false, onSwitchTab }) {
@@ -28,7 +28,6 @@ function Login({ embedded = false, onSwitchTab }) {
       <h2 className="auth__title">Bejelentkezés</h2>
       <p className="auth__subtitle">Lépj be a teendők kezeléséhez</p>
 
-      {error && <div className="auth__error">{error}</div>}
 
       <form onSubmit={handleSubmit} className="auth__form">
         <label className="auth__label">
@@ -53,25 +52,12 @@ function Login({ embedded = false, onSwitchTab }) {
           />
         </label>
 
+        {error && <div className="auth__error">{error}</div>}
+        
         <button className="auth__button" type="submit">
           Belépés
         </button>
       </form>
-
-      <div className="auth__footer">
-        Nincs még fiókod?{" "}
-        {embedded ? (
-          <button
-            type="button"
-            className="auth__linkButton"
-            onClick={() => onSwitchTab?.("register")}
-          >
-            Regisztráció
-          </button>
-        ) : (
-          <Link to="/register">Regisztráció</Link>
-        )}
-      </div>
     </>
   );
 

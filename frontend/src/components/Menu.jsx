@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Menu.css";
-
 
 function Menu() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    localStorage.removeItem("htm_logged_in");
+    setOpen(false);
+    navigate("/");
+  }
 
   // Kattintás a menün kívül -> zárjon be
   useEffect(() => {
@@ -45,6 +51,15 @@ function Menu() {
           <Link className="menu__item" to="/calendar" onClick={() => setOpen(false)}>
             Naptár
           </Link>
+
+          
+          <button
+            type="button"
+            className="menu__item menu__logout"
+            onClick={handleLogout}
+          >
+            Kijelentkezés
+          </button>
         </div>
       )}
     </div>

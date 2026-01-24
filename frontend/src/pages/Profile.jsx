@@ -6,7 +6,7 @@ function Profile() {
       <Header />
       <main style={{ padding: "24px" }}>
         <h1>Felhasználó adatok</h1>
-        <p>(Később ide jönnek a valódi adatok.)</p>
+        <p>(Adatok helye.)</p>
       </main>
     </div>
   );

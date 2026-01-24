@@ -22,7 +22,7 @@
 
 .auth__subtitle {
   margin: 0 0 16px 0;
-  color: #555;
+  color: #ccc9c9;
 }
 
 .auth__error {
@@ -71,17 +71,16 @@
   background: #f4f4f4;
 }
 
-.auth__footer {
-  margin-top: 14px;
-  font-size: 0.95rem;
+
+
+
+.auth__fieldError {
+  margin-top: 6px;
+  color: #b00020;
+  font-size: 0.85rem;
 }
 
-.auth__linkButton {
-  background: none;
-  border: none;
-  padding: 0;
-  color: #0b57d0;
-  cursor: pointer;
-  font-size: inherit;
-  text-decoration: underline;
+.auth__input--error {
+  border-color: #b00020;
+  background: #fdecea;
 }

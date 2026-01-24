@@ -33,3 +33,17 @@
 .menu__item:hover {
   background: #f4f4f4;
 }
+
+.menu__logout {
+  width: 100%;
+  text-align: left;
+  background: white;
+  border: none;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: #b00020;
+}
+
+.menu__logout:hover {
+  background: #fdecea;
+}
