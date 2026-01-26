@@ -47,7 +47,7 @@ function Register({ embedded = false, onSwitchTab }) {
   const content = (
     <>
       <h2 className="auth__title">Regisztráció</h2>
-      <p className="auth__subtitle">Hozz létre fiókot a használathoz</p>
+      <p className="auth__subtitle">Hozd létre fiókod</p>
 
       <form onSubmit={handleSubmit} className="auth__form">
         <label className="auth__label">
