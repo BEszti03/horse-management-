@@ -10,8 +10,9 @@ function Register({ embedded = false, onSwitchTab }) {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
 
-  // mezőnkénti hibák
   const [errors, setErrors] = useState({});
+  const [serverMsg, setServerMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function validate() {
     const nextErrors = {};
@@ -23,24 +24,54 @@ function Register({ embedded = false, onSwitchTab }) {
 
     if (password && password2 && password !== password2) {
       nextErrors.password = "A két jelszó nem egyezik.";
+      nextErrors.password2 = "A két jelszó nem egyezik.";
     }
 
     return nextErrors;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    setServerMsg("");
 
     const nextErrors = validate();
     setErrors(nextErrors);
-
     if (Object.keys(nextErrors).length > 0) return;
 
-    // MVP "register" (később backend)
-    if (embedded) {
-      onSwitchTab?.("login");
-    } else {
-      navigate("/login");
+    setLoading(true);
+    try {
+      const payload = {
+        nev: name.trim(),
+        email: email.trim(),
+        jelszo: password,
+      };
+
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setServerMsg(data?.message || "Regisztráció sikertelen.");
+        return;
+      }
+
+      if (data?.token) localStorage.setItem("token", data.token);
+
+      //siker
+      if (embedded) {
+        // Login tab + success üzenet a Login komponensnek
+        onSwitchTab?.("login", "Sikeres regisztráció!");
+      } else {
+        navigate("/login", { state: { successMsg: "Sikeres regisztráció!" } });
+      }
+    } catch (err) {
+      setServerMsg("Nem érem el a backendet. Fut a backend a 5000-es porton?");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -59,6 +90,7 @@ function Register({ embedded = false, onSwitchTab }) {
             onChange={(e) => {
               setName(e.target.value);
               setErrors((prev) => ({ ...prev, name: "" }));
+              setServerMsg("");
             }}
             placeholder="pl. Kovács Anna"
           />
@@ -74,6 +106,7 @@ function Register({ embedded = false, onSwitchTab }) {
             onChange={(e) => {
               setEmail(e.target.value);
               setErrors((prev) => ({ ...prev, email: "" }));
+              setServerMsg("");
             }}
             placeholder="pl. anna@email.hu"
           />
@@ -89,6 +122,7 @@ function Register({ embedded = false, onSwitchTab }) {
             onChange={(e) => {
               setPassword(e.target.value);
               setErrors((prev) => ({ ...prev, password: "" }));
+              setServerMsg("");
             }}
             placeholder="••••••••"
           />
@@ -104,15 +138,18 @@ function Register({ embedded = false, onSwitchTab }) {
             onChange={(e) => {
               setPassword2(e.target.value);
               setErrors((prev) => ({ ...prev, password2: "" }));
+              setServerMsg("");
             }}
             placeholder="••••••••"
           />
           {errors.password2 && <div className="auth__fieldError">{errors.password2}</div>}
         </label>
 
-        <button className="auth__button" type="submit">
-          Regisztráció
+        <button className="auth__button" type="submit" disabled={loading}>
+          {loading ? "Küldés..." : "Regisztráció"}
         </button>
+
+        {serverMsg && <div className="auth__fieldError">{serverMsg}</div>}
       </form>
     </>
   );
