@@ -5,6 +5,7 @@ require("dotenv").config();
 const pool = require("./config/db");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
+const stablesRoutes = require("./routes/stables");
 
 const app = express();
 const PORT = 5000;
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/stables", stablesRoutes);
 
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello a backendből!" });
