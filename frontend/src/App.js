@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route} from "react-router-dom";
 
 import MainPage from "./pages/MainPage";
 import Home from "./pages/Home";
@@ -9,20 +9,14 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        
         <Route path="/" element={<MainPage />} />
 
-        <Route path="/" element={<Navigate to="/home" replace />} />
-
-        
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
 
         <Route
           path="/home"
@@ -57,8 +51,10 @@ function App() {
           }
         />
 
-        {/* 404 */}
-        <Route path="*" element={<h1 style={{ padding: 24 }}>404 – Nincs ilyen oldal</h1>} />
+        <Route
+          path="*"
+          element={<h1 style={{ padding: 24 }}>404 – Nincs ilyen oldal</h1>}
+        />
       </Routes>
     </BrowserRouter>
   );
