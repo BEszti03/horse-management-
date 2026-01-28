@@ -9,12 +9,37 @@
   flex: 1;
   text-align: center;
 }
-.backend-status {
-  margin-top: 16px;
-  font-size: 0.9rem;
-  color: #2e7d32;
-  background-color: #e8f5e9;
-  padding: 8px 12px;
-  border-radius: 6px;
-  display: inline-block;
+
+.home-weekly {
+  margin: 18px auto 0;
+  max-width: 520px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.home-weekly h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.home-subtitle {
+  margin: 14px 0 6px;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.weekly-todo-list {
+  margin: 0;
+  padding-left: 18px;
+  text-align: left;
+}
+
+.weekly-todo-list li {
+  margin: 6px 0;
+}
+
+.muted {
+  margin: 0;
+  opacity: 0.75;
 }

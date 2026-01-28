@@ -11,7 +11,7 @@ function requireAuth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { felhasznalo_id, email, szerepkor }
+    req.user = decoded; // { felhasznalo_id, email, szerepkor, lovarda_id? }
     next();
   } catch (err) {
     return res.status(401).json({ error: "Érvénytelen token" });
@@ -31,6 +31,7 @@ router.get("/", requireAuth, async (req, res) => {
         v.verseny_id,
         v.nev,
         v.datum::text AS datum,
+        v.lovarda_id,
         l.nev AS lovarda_nev,
         EXISTS (
           SELECT 1 
@@ -77,7 +78,9 @@ router.post("/", requireAuth, async (req, res) => {
     const lovardaId = userRes.rows[0]?.lovarda_id;
 
     if (!lovardaId) {
-      return res.status(400).json({ error: "A felhasználó nincs lovardához rendelve" });
+      return res.status(400).json({
+        error: "A felhasználó nincs lovardához rendelve",
+      });
     }
 
     await pool.query(
@@ -131,7 +134,7 @@ router.post("/:id/signup", requireAuth, async (req, res) => {
         return res.status(400).json({ error: "Ez a ló nem a te lovad." });
       }
 
-      // Constraint nélkül is biztonságos duplikáció-védelem
+      //duplikáció-védelem
       await pool.query(
         `
         INSERT INTO verseny_lo (verseny_id, lo_id)
@@ -157,7 +160,9 @@ router.post("/:id/signup", requireAuth, async (req, res) => {
 ========================= */
 router.delete("/:id/signup", requireAuth, async (req, res) => {
   if (req.user.szerepkor !== "lovas") {
-    return res.status(403).json({ error: "Csak lovas vonhatja vissza a jelentkezést" });
+    return res
+      .status(403)
+      .json({ error: "Csak lovas vonhatja vissza a jelentkezést" });
   }
 
   const versenyId = req.params.id;
@@ -186,7 +191,9 @@ router.delete("/:id/signup", requireAuth, async (req, res) => {
     return res.status(204).send();
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Jelentkezés visszavonása sikertelen" });
+    return res
+      .status(500)
+      .json({ error: "Jelentkezés visszavonása sikertelen" });
   }
 });
 
@@ -211,7 +218,9 @@ router.delete("/:id", requireAuth, async (req, res) => {
     const lovardaId = userRes.rows[0]?.lovarda_id;
 
     if (!lovardaId) {
-      return res.status(400).json({ error: "A felhasználó nincs lovardához rendelve" });
+      return res.status(400).json({
+        error: "A felhasználó nincs lovardához rendelve",
+      });
     }
 
     // Ellenőrizzük hogy a verseny tényleg a saját lovardájáé-e
@@ -221,11 +230,15 @@ router.delete("/:id", requireAuth, async (req, res) => {
     );
 
     if (ownRes.rowCount === 0) {
-      return res.status(404).json({ error: "Nincs ilyen verseny, vagy nem a te lovardádé" });
+      return res
+        .status(404)
+        .json({ error: "Nincs ilyen verseny, vagy nem a te lovardádé" });
     }
 
     // Kapcsolótáblák törlése
-    await pool.query("DELETE FROM verseny_felhasznalo WHERE verseny_id = $1", [versenyId]);
+    await pool.query("DELETE FROM verseny_felhasznalo WHERE verseny_id = $1", [
+      versenyId,
+    ]);
     await pool.query("DELETE FROM verseny_lo WHERE verseny_id = $1", [versenyId]);
 
     // Verseny törlése
