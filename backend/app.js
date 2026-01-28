@@ -8,6 +8,7 @@ const userRoutes = require("./routes/users");
 const stablesRoutes = require("./routes/stables");
 const horseRoutes = require("./routes/horses");
 const calendarRoutes = require("./routes/calendar");
+const competitionsRoutes = require("./routes/competitions");
 
 const app = express();
 const PORT = 5000;
@@ -20,6 +21,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/stables", stablesRoutes);
 app.use("/api/horses", horseRoutes);
 app.use("/api/calendar", calendarRoutes);
+app.use("/api/competitions", competitionsRoutes);
+
 
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello a backendből!" });
