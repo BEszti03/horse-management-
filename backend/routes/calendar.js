@@ -78,6 +78,7 @@ router.get("/", requireAuth, async (req, res) => {
       JOIN felhasznalo u ON u.felhasznalo_id = pt.felhasznalo_id
       LEFT JOIN lo l ON l.lo_id = pt.lo_id
       WHERE p.lovarda_id = $1
+        AND u.lovarda_id = $1 
         AND pt.mettol < $3
         AND COALESCE(pt.meddig, pt.mettol) > $2
       ORDER BY pt.mettol ASC
