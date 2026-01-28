@@ -6,7 +6,6 @@ function Profile() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Proxy nélkül is biztos
   const API_BASE = "http://localhost:5000";
 
   const [user, setUser] = useState(null);
@@ -15,6 +14,7 @@ function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [nev, setNev] = useState("");
   const [lovardaId, setLovardaId] = useState("");
+  const [szerepkor, setSzerepkor] = useState("lovas");
 
   const [showAddStable, setShowAddStable] = useState(false);
   const [newStableName, setNewStableName] = useState("");
@@ -55,10 +55,12 @@ function Profile() {
         setUser(meData.user);
         setNev(meData.user.nev || "");
         setLovardaId(meData.user.lovarda_id ?? "");
+        setSzerepkor(meData.user.szerepkor || "lovas");
 
         const stablesRes = await fetch(`${API_BASE}/api/stables`);
         const stablesData = await safeJson(stablesRes);
-        if (!stablesRes.ok) throw new Error(stablesData.message || "Nem sikerült lekérni a lovardákat.");
+        if (!stablesRes.ok)
+          throw new Error(stablesData.message || "Nem sikerült lekérni a lovardákat.");
 
         setStables(stablesData.stables || []);
       } catch (err) {
@@ -85,6 +87,7 @@ function Profile() {
         body: JSON.stringify({
           nev,
           lovarda_id: lovardaId === "" ? null : Number(lovardaId),
+          szerepkor,
         }),
       });
 
@@ -135,6 +138,11 @@ function Profile() {
     }
   }
 
+  function roleLabel(r) {
+    if (r === "lovarda_vezeto") return "Lovarda vezető";
+    return "Lovas";
+  }
+
   return (
     <div>
       <Header />
@@ -152,7 +160,7 @@ function Profile() {
               <>
                 <p><b>Név:</b> {user.nev}</p>
                 <p><b>Email:</b> {user.email}</p>
-                <p><b>Szerepkör:</b> {user.szerepkor}</p>
+                <p><b>Szerepkör:</b> {roleLabel(user.szerepkor)}</p>
                 <p><b>Lovarda:</b> {user.lovarda_nev || "Nincs beállítva"}</p>
 
                 <button onClick={() => setEditMode(true)}>Profil szerkesztése</button>
@@ -162,6 +170,14 @@ function Profile() {
                 <label>
                   Név
                   <input value={nev} onChange={(e) => setNev(e.target.value)} />
+                </label>
+
+                <label>
+                  Szerepkör
+                  <select value={szerepkor} onChange={(e) => setSzerepkor(e.target.value)}>
+                    <option value="lovas">Lovas</option>
+                    <option value="lovarda_vezeto">Lovarda vezető</option>
+                  </select>
                 </label>
 
                 <label>
@@ -193,7 +209,20 @@ function Profile() {
 
                 <div style={{ marginTop: 12 }}>
                   <button onClick={handleSave}>Mentés</button>
-                  <button onClick={() => setEditMode(false)}>Mégse</button>
+                  <button
+                    onClick={() => {
+                      setEditMode(false);
+                      setNev(user.nev || "");
+                      setLovardaId(user.lovarda_id ?? "");
+                      setSzerepkor(user.szerepkor || "lovas");
+                      setShowAddStable(false);
+                      setNewStableName("");
+                      setError("");
+                      setSuccess("");
+                    }}
+                  >
+                    Mégse
+                  </button>
                 </div>
               </>
             )}
