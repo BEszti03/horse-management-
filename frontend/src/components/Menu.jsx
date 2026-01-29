@@ -8,7 +8,7 @@ function Menu() {
   const navigate = useNavigate();
 
   function handleLogout() {
-    //Teljes kijelentkezés
+    // Teljes kijelentkezés
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("htm_logged_in");
@@ -49,9 +49,15 @@ function Menu() {
           <Link className="menu__item" to="/profile" onClick={() => setOpen(false)}>
             Felhasználó adatok
           </Link>
+
           <Link className="menu__item" to="/horses" onClick={() => setOpen(false)}>
             Ló adatok
           </Link>
+
+          <Link className="menu__item" to="/notes" onClick={() => setOpen(false)}>
+            Jegyzetek
+          </Link>
+
           <Link className="menu__item" to="/calendar" onClick={() => setOpen(false)}>
             Naptár
           </Link>

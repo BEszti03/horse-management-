@@ -7,6 +7,7 @@ import Horses from "./pages/Horses";
 import Calendar from "./pages/Calendar";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Notes from "./pages/Notes";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -42,6 +43,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+        path="/notes"
+        element={
+          <ProtectedRoute>
+            <Notes />
+          </ProtectedRoute>
+        }
+        />
+
         <Route
           path="/calendar"
           element={
