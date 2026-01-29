@@ -7,9 +7,7 @@
 
   background-size: cover;
   background-position: top;
-
 }
-
 
 .mainpage__card {
   width: 100%;
@@ -32,6 +30,15 @@
   text-align: center;
   color: #ccc9c9;
   margin: 0 0 18px 0;
+}
+
+.mainpage__info {
+  margin: 10px 0 14px 0;
+  padding: 10px 12px;
+  border: 1px solid #443a1e;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  font-weight: 600;
 }
 
 .mainpage__tabs {

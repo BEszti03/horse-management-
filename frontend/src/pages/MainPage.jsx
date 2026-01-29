@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
 import "./MainPage.css";
@@ -16,19 +17,28 @@ const backgrounds = [bg1, bg2, bg3, bg4, bg5, bg6, bg7];
 function MainPage() {
   const [activeTab, setActiveTab] = useState("login");
 
-  //flash üzenet (pl. sikeres regisztráció) amit Loginnek átadunk
-  const [authFlashMsg, setAuthFlashMsg] = useState("");
+  const [showAuthRequiredMsg, setShowAuthRequiredMsg] = useState(false);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Háttérkép random
   const backgroundImage = useMemo(() => {
     const idx = Math.floor(Math.random() * backgrounds.length);
     return backgrounds[idx];
   }, []);
 
-  // ✅ onSwitchTab: opcionálisan fogad üzenetet is
-  const handleSwitchTab = (tab, msg) => {
-    setActiveTab(tab);
-    if (msg) setAuthFlashMsg(msg);
-  };
+  //Ha ProtectedRoute dobott ide:
+  //álljunk Login tabra
+  //állítsuk be a helyi üzenetet
+  // majd "fogyasszuk el" a router state-et (replace), hogy refresh után ne maradjon meg
+  useEffect(() => {
+    if (location.state?.authRequired) {
+      setActiveTab("login");
+      setShowAuthRequiredMsg(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   return (
     <div className="mainpage" style={{ backgroundImage: `url(${backgroundImage})` }}>
@@ -36,34 +46,32 @@ function MainPage() {
         <h1 className="mainpage__title">Horse Time Management</h1>
         <p className="mainpage__subtitle">Lovas teendők és időbeosztás egyszerűen</p>
 
+        {showAuthRequiredMsg && (
+          <div className="mainpage__info">
+            Az oldal megtekintéséhez először be kell jelentkeznie.
+          </div>
+        )}
+
         <div className="mainpage__tabs">
           <button
+            type="button"
             className={`mainpage__tab ${activeTab === "login" ? "active" : ""}`}
             onClick={() => setActiveTab("login")}
-            type="button"
           >
             Belépés
           </button>
+
           <button
+            type="button"
             className={`mainpage__tab ${activeTab === "register" ? "active" : ""}`}
             onClick={() => setActiveTab("register")}
-            type="button"
           >
             Regisztráció
           </button>
         </div>
 
         <div className="mainpage__content">
-          {activeTab === "login" ? (
-            <Login
-              embedded
-              onSwitchTab={handleSwitchTab}
-              embeddedSuccessMsg={authFlashMsg}
-              clearEmbeddedSuccessMsg={() => setAuthFlashMsg("")}
-            />
-          ) : (
-            <Register embedded onSwitchTab={handleSwitchTab} />
-          )}
+          {activeTab === "login" ? <Login embedded /> : <Register embedded />}
         </div>
       </div>
     </div>

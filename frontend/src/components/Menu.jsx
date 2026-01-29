@@ -8,9 +8,13 @@ function Menu() {
   const navigate = useNavigate();
 
   function handleLogout() {
+    //Teljes kijelentkezés
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     localStorage.removeItem("htm_logged_in");
+
     setOpen(false);
-    navigate("/");
+    navigate("/", { replace: true });
   }
 
   // Kattintás a menün kívül -> zárjon be
@@ -20,7 +24,7 @@ function Menu() {
         setOpen(false);
       }
     }
-  // ESC lenyomása -> zárjon be
+    // ESC lenyomása -> zárjon be
     function handleEsc(event) {
       if (event.key === "Escape") setOpen(false);
     }
@@ -52,12 +56,7 @@ function Menu() {
             Naptár
           </Link>
 
-          
-          <button
-            type="button"
-            className="menu__item menu__logout"
-            onClick={handleLogout}
-          >
+          <button type="button" className="menu__item menu__logout" onClick={handleLogout}>
             Kijelentkezés
           </button>
         </div>
