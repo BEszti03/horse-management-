@@ -13,7 +13,7 @@ router.get("/", async (_req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error.", error: err.message });
+    res.status(500).json({ message: "Szerver hiba.", error: err.message });
   }
 });
 
@@ -23,7 +23,7 @@ router.post("/", requireAuth, async (req, res) => {
     const { name } = req.body;
 
     if (!name || !String(name).trim()) {
-      return res.status(400).json({ message: "Stable name is required." });
+      return res.status(400).json({ message: "A lovarda neve kötelező." });
     }
 
     const inserted = await pool.query(
@@ -34,12 +34,12 @@ router.post("/", requireAuth, async (req, res) => {
     );
 
     res.status(201).json({
-      message: "Stable created.",
+      message: "Lovarda létrehozva.",
       stable: { stable_id: inserted.rows[0].lovarda_id, name: inserted.rows[0].nev },
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error.", error: err.message });
+    res.status(500).json({ message: "Szerver hiba.", error: err.message });
   }
 });
 
