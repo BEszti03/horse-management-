@@ -6,7 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-const API = "http://localhost:5000";
+import { apiFetch } from "../utils/api";
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -54,11 +54,7 @@ function Calendar() {
   useEffect(() => {
     async function loadHorses() {
       try {
-        const res = await fetch(`${API}/api/horses`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await apiFetch("/api/horses");
         setHorses(Array.isArray(data) ? data : []);
       } catch {
         // ignore
@@ -74,11 +70,7 @@ function Calendar() {
       const to = info.endStr.slice(0, 10);
 
       //Saját naptár események (pálya + teendő)
-      const res = await fetch(`${API}/api/calendar?from=${from}&to=${to}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Nem sikerült betölteni a naptárt");
-      const data = await res.json();
+      const data = await apiFetch(`/api/calendar?from=${from}&to=${to}`);
 
       const normalized = (Array.isArray(data) ? data : []).map((ev) => {
         const p = ev.extendedProps || {};
@@ -92,12 +84,8 @@ function Calendar() {
       //Versenyek (mindenki látja)
       let competitions = [];
       try {
-        const cRes = await fetch(`${API}/api/competitions`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (cRes.ok) {
-          const cData = await cRes.json();
-          competitions = (Array.isArray(cData) ? cData : []).map((c) => ({
+        const cData = await apiFetch("/api/competitions");
+        competitions = (Array.isArray(cData) ? cData : []).map((c) => ({
             id: `verseny-${c.verseny_id}`,
             title: `🏆 ${c.nev} (${c.lovarda_nev})`,
             start: c.datum, // YYYY-MM-DD
@@ -113,7 +101,6 @@ function Calendar() {
               jelentkezett: !!c.jelentkezett,
             },
           }));
-        }
       } catch {
       }
 
@@ -227,7 +214,7 @@ function Calendar() {
 
         const datum = startLocal.slice(0, 10); // YYYY-MM-DD
 
-        const res = await fetch(`${API}/api/competitions`, {
+        const res = await fetch(`/api/competitions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -254,7 +241,7 @@ function Calendar() {
 
       // Pálya
       if (type === "palya") {
-        const res = await fetch(`${API}/api/calendar/palya-booking`, {
+        const res = await fetch(`/api/calendar/palya-booking`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -291,7 +278,7 @@ function Calendar() {
         return;
       }
 
-      const res = await fetch(`${API}/api/calendar/teendo`, {
+      const res = await fetch(`/api/calendar/teendo`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -330,7 +317,7 @@ function Calendar() {
     }
 
     try {
-      const res = await fetch(`${API}/api/competitions/${current.verseny_id}/signup`, {
+      const res = await fetch(`/api/competitions/${current.verseny_id}/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -367,7 +354,7 @@ function Calendar() {
     if (!window.confirm("Biztosan visszavonod a jelentkezést?")) return;
 
     try {
-      const res = await fetch(`${API}/api/competitions/${current.verseny_id}/signup`, {
+      const res = await fetch(`/api/competitions/${current.verseny_id}/signup`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -400,7 +387,7 @@ function Calendar() {
     if (!window.confirm("Biztosan törlöd ezt a versenyt?")) return;
 
     try {
-      const res = await fetch(`${API}/api/competitions/${current.verseny_id}`, {
+      const res = await fetch(`/api/competitions/${current.verseny_id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -441,7 +428,7 @@ function Calendar() {
 
       // Pálya edit
       if (current.category === "palya") {
-        const res = await fetch(`${API}/api/calendar/palya-booking/${current.palya_id}`, {
+        const res = await fetch(`/api/calendar/palya-booking/${current.palya_id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -477,7 +464,7 @@ function Calendar() {
         return;
       }
 
-      const res = await fetch(`${API}/api/calendar/teendo/${current.teendo_id}`, {
+      const res = await fetch(`/api/calendar/teendo/${current.teendo_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -518,7 +505,7 @@ function Calendar() {
 
     try {
       if (current.category === "palya") {
-        const res = await fetch(`${API}/api/calendar/palya-booking/${current.palya_id}`, {
+        const res = await fetch(`/api/calendar/palya-booking/${current.palya_id}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -534,7 +521,7 @@ function Calendar() {
         return;
       }
 
-      const res = await fetch(`${API}/api/calendar/teendo/${current.teendo_id}`, {
+      const res = await fetch(`/api/calendar/teendo/${current.teendo_id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -575,7 +562,7 @@ function Calendar() {
 
     try {
       if (p.category === "palya") {
-        const res = await fetch(`${API}/api/calendar/palya-booking/${p.palya_id}`, {
+        const res = await fetch(`/api/calendar/palya-booking/${p.palya_id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -607,7 +594,7 @@ function Calendar() {
       if (p.category === "teendo") {
         const cleanLeiras = (p.raw_leiras || "").trim() || "Teendő";
 
-        const res = await fetch(`${API}/api/calendar/teendo/${p.teendo_id}`, {
+        const res = await fetch(`/api/calendar/teendo/${p.teendo_id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

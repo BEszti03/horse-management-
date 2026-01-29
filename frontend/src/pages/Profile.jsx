@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { apiFetch } from "../utils/api";
 
 function Profile() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
-  const API_BASE = "http://localhost:5000";
 
   const [user, setUser] = useState(null);
   const [stables, setStables] = useState([]);
@@ -23,17 +22,6 @@ function Profile() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  async function safeJson(res) {
-    const text = await res.text();
-    try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error(
-        `Nem JSON válasz érkezett (${res.status}). Első 60 karakter: ${text.slice(0, 60)}`
-      );
-    }
-  }
-
   useEffect(() => {
     if (!token) {
       navigate("/login", { replace: true });
@@ -46,23 +34,18 @@ function Profile() {
         setError("");
         setSuccess("");
 
-        const meRes = await fetch(`${API_BASE}/api/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const meData = await safeJson(meRes);
-        if (!meRes.ok) throw new Error(meData.message || "Nem sikerült lekérni a profilt.");
+        const meData = await apiFetch("/api/users/me");
 
         setUser(meData.user);
         setNev(meData.user.nev || "");
         setLovardaId(meData.user.lovarda_id ?? "");
         setSzerepkor(meData.user.szerepkor || "lovas");
 
-        const stablesRes = await fetch(`${API_BASE}/api/stables`);
-        const stablesData = await safeJson(stablesRes);
-        if (!stablesRes.ok)
-          throw new Error(stablesData.message || "Nem sikerült lekérni a lovardákat.");
-
-        setStables(stablesData.stables || []);
+        const stablesData = await apiFetch("/api/stables", {
+          // ez nyilvános endpoint is lehet, de a helper tokennel sem árt
+          headers: { "Content-Type": "application/json" },
+        });
+        setStables(stablesData?.stables || []);
       } catch (err) {
         setError(err.message || "Hiba történt.");
       } finally {
@@ -78,21 +61,14 @@ function Profile() {
       setError("");
       setSuccess("");
 
-      const res = await fetch(`${API_BASE}/api/users/me`, {
+      const data = await apiFetch("/api/users/me", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           nev,
           lovarda_id: lovardaId === "" ? null : Number(lovardaId),
           szerepkor,
         }),
       });
-
-      const data = await safeJson(res);
-      if (!res.ok) throw new Error(data.message || "Mentés sikertelen.");
 
       setUser(data.user);
       setSuccess("Sikeres mentés!");
@@ -112,25 +88,19 @@ function Profile() {
       setError("");
       setSuccess("");
 
-      const res = await fetch(`${API_BASE}/api/stables`, {
+      const data = await apiFetch("/api/stables", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ name: newStableName.trim() }),
       });
-
-      const data = await safeJson(res);
-      if (!res.ok) throw new Error(data.message || "Lovarda felvitel sikertelen.");
 
       setNewStableName("");
       setShowAddStable(false);
       setSuccess("Lovarda hozzáadva.");
 
-      const listRes = await fetch(`${API_BASE}/api/stables`);
-      const listData = await safeJson(listRes);
-      setStables(listData.stables || []);
+      const listData = await apiFetch("/api/stables", {
+        headers: { "Content-Type": "application/json" },
+      });
+      setStables(listData?.stables || []);
 
       if (data?.stable?.stable_id) setLovardaId(String(data.stable.stable_id));
     } catch (err) {

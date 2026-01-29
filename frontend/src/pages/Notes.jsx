@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Header from "../components/Header";
 import "./Notes.css";
+import { apiFetch } from "../utils/api";
 
 function Notes() {
   const [notes, setNotes] = useState([]);
@@ -10,20 +11,15 @@ function Notes() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
-
   const fetchNotes = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/notes", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) setNotes(data);
-      else setNotes([]);
-    } catch {
+      const data = await apiFetch("/api/notes");
+      setNotes(Array.isArray(data) ? data : []);
+    } catch (err) {
       setNotes([]);
+      setError(err?.message || "Nem sikerült betölteni a jegyzeteket.");
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchNotes();
@@ -45,22 +41,16 @@ function Notes() {
     setError("");
     setMessage("");
 
-    const method = editingId ? "PUT" : "POST";
-    const url = editingId
-      ? `http://localhost:5000/api/notes/${editingId}`
-      : "http://localhost:5000/api/notes";
+    try {
+      const method = editingId ? "PUT" : "POST";
+      const url = editingId ? `/api/notes/${editingId}` : "/api/notes";
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ cim, szoveg }),
-    });
-
-    if (!res.ok) {
-      setError("Mentés sikertelen.");
+      await apiFetch(url, {
+        method,
+        body: JSON.stringify({ cim, szoveg }),
+      });
+    } catch (err) {
+      setError(err?.message || "Mentés sikertelen.");
       return;
     }
 
@@ -81,12 +71,12 @@ function Notes() {
   async function deleteNote(id) {
     if (!window.confirm("Biztosan törlöd ezt a jegyzetet?")) return;
 
-    await fetch(`http://localhost:5000/api/notes/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    fetchNotes();
+    try {
+      await apiFetch(`/api/notes/${id}`, { method: "DELETE" });
+      fetchNotes();
+    } catch (err) {
+      setError(err?.message || "Törlés sikertelen.");
+    }
   }
 
   return (

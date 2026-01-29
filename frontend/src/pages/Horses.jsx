@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import Header from "../components/Header";
+import { apiFetch } from "../utils/api";
 
 function Horses() {
   const [horses, setHorses] = useState([]);
@@ -16,26 +17,15 @@ function Horses() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
-
   const fetchHorses = useCallback(async () => {
     setError("");
     try {
-      const res = await fetch("http://localhost:5000/api/horses", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Hiba a lovak lekérésekor.");
-        return;
-      }
-
-      setHorses(data);
-    } catch {
-      setError("Nem sikerült kapcsolódni a szerverhez.");
+      const data = await apiFetch("/api/horses");
+      setHorses(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err?.message || "Nem sikerült kapcsolódni a szerverhez.");
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchHorses();
@@ -47,12 +37,8 @@ function Horses() {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/horses", {
+      await apiFetch("/api/horses", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           nev,
           fajta,
@@ -60,20 +46,13 @@ function Horses() {
         }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Hiba történt.");
-        return;
-      }
-
       setMessage("Ló sikeresen hozzáadva!");
       setNev("");
       setFajta("");
       setSzuletesiIdo("");
       fetchHorses();
-    } catch {
-      setError("Nem sikerült kapcsolódni a szerverhez.");
+    } catch (err) {
+      setError(err?.message || "Nem sikerült kapcsolódni a szerverhez.");
     }
   }
 
@@ -98,12 +77,8 @@ function Horses() {
     setMessage("");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/horses/${loId}`, {
+      await apiFetch(`/api/horses/${loId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           nev: editNev,
           fajta: editFajta,
@@ -111,18 +86,11 @@ function Horses() {
         }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Hiba a mentéskor.");
-        return;
-      }
-
       setMessage("Ló sikeresen frissítve!");
       cancelEdit();
       fetchHorses();
-    } catch {
-      setError("Nem sikerült kapcsolódni a szerverhez.");
+    } catch (err) {
+      setError(err?.message || "Nem sikerült kapcsolódni a szerverhez.");
     }
   }
 
@@ -134,25 +102,13 @@ function Horses() {
     if (!ok) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/horses/${loId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Hiba a törléskor.");
-        return;
-      }
+      await apiFetch(`/api/horses/${loId}`, { method: "DELETE" });
 
       setMessage("Ló törölve!");
       if (editingId === loId) cancelEdit();
       fetchHorses();
-    } catch {
-      setError("Nem sikerült kapcsolódni a szerverhez.");
+    } catch (err) {
+      setError(err?.message || "Nem sikerült kapcsolódni a szerverhez.");
     }
   }
 

@@ -1,21 +1,8 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
+const requireAuth = require("../middleware/requireAuth");
 const pool = require("../config/db");
 
 const router = express.Router();
-
-function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!token) return res.status(401).json({ message: "No token." });
-
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ message: "Invalid or expired token." });
-  }
-}
 
 // GET /api/stables
 router.get("/", async (_req, res) => {

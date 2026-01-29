@@ -1,23 +1,8 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
+const requireAuth = require("../middleware/requireAuth");
 const pool = require("../config/db");
 
 const router = express.Router();
-
-function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-  if (!token) return res.status(401).json({ message: "Nincs token." });
-
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // { felhasznalo_id, email, szerepkor }
-    next();
-  } catch {
-    return res.status(401).json({ message: "Érvénytelen vagy lejárt token." });
-  }
-}
 
 const ALLOWED_ROLES = new Set(["lovas", "lovarda_vezeto"]);
 
