@@ -256,7 +256,7 @@ function Home() {
                 </div>
               </div>
               <p className="homeMiniHint">
-                A részletekhez menj a Naptár / Verseny menüpontra.
+                A részletekhez menj a Naptár menüpontra.
               </p>
             </div>
           </aside>
