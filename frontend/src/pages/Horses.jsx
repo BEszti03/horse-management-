@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
+import "./Horses.css";
 
 function Horses() {
   const [horses, setHorses] = useState([]);
@@ -113,105 +114,147 @@ function Horses() {
   }
 
   return (
-    <div>
+    <div className="horsesPage">
       <Header />
 
-      <main style={{ padding: "24px", maxWidth: "900px" }}>
-        <h1>Ló adatok</h1>
+      <main className="horsesMain">
+        <div className="horsesHeader">
+          <h1 className="horsesTitle">Ló adatok</h1>
+        </div>
 
-        <section style={{ marginBottom: "32px" }}>
-          <h2>Új ló felvétele</h2>
+        {message && <div className="horsesAlert horsesAlertSuccess">{message}</div>}
+        {error && <div className="horsesAlert horsesAlertError">{error}</div>}
 
-          <form onSubmit={handleCreate} style={{ display: "grid", gap: "10px" }}>
-            <input
-              type="text"
-              placeholder="Ló neve"
-              value={nev}
-              onChange={(e) => setNev(e.target.value)}
-              required
-            />
+        <section className="horsesCard">
+          <div className="cardHeader">
+            <h2 className="cardTitle">Új ló felvétele</h2>
+            <p className="cardHint">Add meg a ló alapadatait, később bármikor módosíthatod.</p>
+          </div>
 
-            <input
-              type="text"
-              placeholder="Fajta"
-              value={fajta}
-              onChange={(e) => setFajta(e.target.value)}
-            />
+          <form onSubmit={handleCreate} className="horsesForm">
+            <label className="field">
+              <span className="fieldLabel">Ló neve</span>
+              <input
+                className="fieldInput"
+                type="text"
+                placeholder="Pl. Csillag"
+                value={nev}
+                onChange={(e) => setNev(e.target.value)}
+                required
+              />
+            </label>
 
-            <input
-              type="date"
-              value={szuletesiIdo}
-              onChange={(e) => setSzuletesiIdo(e.target.value)}
-            />
+            <label className="field">
+              <span className="fieldLabel">Fajta</span>
+              <input
+                className="fieldInput"
+                type="text"
+                placeholder="Pl. Magyar sportló"
+                value={fajta}
+                onChange={(e) => setFajta(e.target.value)}
+              />
+            </label>
 
-            <button type="submit">Hozzáadás</button>
+            <label className="field">
+              <span className="fieldLabel">Születési dátum</span>
+              <input
+                className="fieldInput"
+                type="date"
+                value={szuletesiIdo}
+                onChange={(e) => setSzuletesiIdo(e.target.value)}
+              />
+            </label>
+
+            <div className="horsesActions">
+              <button className="btn btnPrimary" type="submit">
+                Hozzáadás
+              </button>
+            </div>
           </form>
         </section>
 
-        {message && <p style={{ color: "green" }}>{message}</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-
-        <section>
-          <h2>Saját lovaim</h2>
+        <section className="horsesCard">
+          <div className="cardHeader">
+            <h2 className="cardTitle">Saját lovaim</h2>
+            <p className="cardHint">
+              A listában szerkesztheted az adatokat, vagy törölheted a lovat.
+            </p>
+          </div>
 
           {horses.length === 0 ? (
-            <p>Még nincs felvett ló.</p>
+            <p className="horsesEmpty">Még nincs felvett ló.</p>
           ) : (
-            <ul style={{ paddingLeft: "18px" }}>
+            <ul className="horsesList">
               {horses.map((lo) => (
-                <li key={lo.lo_id} style={{ marginBottom: "14px" }}>
+                <li key={lo.lo_id} className="horseItem">
                   {editingId === lo.lo_id ? (
-                    <div style={{ display: "grid", gap: "8px" }}>
-                      <input
-                        type="text"
-                        value={editNev}
-                        onChange={(e) => setEditNev(e.target.value)}
-                        required
-                      />
-                      <input
-                        type="text"
-                        value={editFajta}
-                        onChange={(e) => setEditFajta(e.target.value)}
-                      />
-                      <input
-                        type="date"
-                        value={editSzuletesiIdo}
-                        onChange={(e) => setEditSzuletesiIdo(e.target.value)}
-                      />
+                    <div className="editBox">
+                      <div className="editGrid">
+                        <label className="field">
+                          <span className="fieldLabel">Név</span>
+                          <input
+                            className="fieldInput"
+                            type="text"
+                            value={editNev}
+                            onChange={(e) => setEditNev(e.target.value)}
+                            required
+                          />
+                        </label>
 
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        <button onClick={() => handleUpdate(lo.lo_id)}>
+                        <label className="field">
+                          <span className="fieldLabel">Fajta</span>
+                          <input
+                            className="fieldInput"
+                            type="text"
+                            value={editFajta}
+                            onChange={(e) => setEditFajta(e.target.value)}
+                          />
+                        </label>
+
+                        <label className="field">
+                          <span className="fieldLabel">Születési dátum</span>
+                          <input
+                            className="fieldInput"
+                            type="date"
+                            value={editSzuletesiIdo}
+                            onChange={(e) => setEditSzuletesiIdo(e.target.value)}
+                          />
+                        </label>
+                      </div>
+
+                      <div className="horsesActions horsesActionsSplit">
+                        <button className="btn btnPrimary" type="button" onClick={() => handleUpdate(lo.lo_id)}>
                           Mentés
                         </button>
-                        <button type="button" onClick={cancelEdit}>
+                        <button className="btn btnGhost" type="button" onClick={cancelEdit}>
                           Mégse
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <span>
-                        <strong>{lo.nev}</strong>
-                        {lo.fajta ? ` – ${lo.fajta}` : ""}
-                        {lo.szuletesi_ido
-                          ? ` (${lo.szuletesi_ido.slice(0, 10)})`
-                          : ""}
-                      </span>
+                    <div className="horseRow">
+                      <div className="horseText">
+                        <div className="horseName">
+                          {lo.nev}
+                          {lo.fajta ? <span className="horseMeta"> – {lo.fajta}</span> : null}
+                        </div>
+                        <div className="horseSub">
+                          {lo.szuletesi_ido ? (
+                            <span className="horseDate">{lo.szuletesi_ido.slice(0, 10)}</span>
+                          ) : (
+                            <span className="horseMuted">Nincs megadva születési dátum</span>
+                          )}
+                        </div>
+                      </div>
 
-                      <button type="button" onClick={() => startEdit(lo)}>
-                        Szerkesztés
-                      </button>
-
-                      <button type="button" onClick={() => handleDelete(lo.lo_id)}>
-                        Törlés
-                      </button>
+                      <div className="horseButtons">
+                        <button className="btn btnSoft" type="button" onClick={() => startEdit(lo)}>
+                          Szerkesztés
+                        </button>
+                        <button className="btn btnDanger" type="button" onClick={() => handleDelete(lo.lo_id)}>
+                          Törlés
+                        </button>
+                      </div>
                     </div>
                   )}
                 </li>

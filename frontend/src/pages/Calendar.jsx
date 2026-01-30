@@ -8,6 +8,8 @@ import interactionPlugin from "@fullcalendar/interaction";
 
 import { apiFetch } from "../utils/api";
 
+import "./Calendar.css";
+
 function pad(n) {
   return String(n).padStart(2, "0");
 }
@@ -86,22 +88,23 @@ function Calendar() {
       try {
         const cData = await apiFetch("/api/competitions");
         competitions = (Array.isArray(cData) ? cData : []).map((c) => ({
-            id: `verseny-${c.verseny_id}`,
-            title: `🏆 ${c.nev} (${c.lovarda_nev})`,
-            start: c.datum, // YYYY-MM-DD
-            end: addDays(new Date(c.datum), 1).toISOString().slice(0, 10),
-            allDay: true,
-            editable: false,
-            extendedProps: {
-              category: "competition",
-              verseny_id: c.verseny_id,
-              nev: c.nev,
-              datum: c.datum,
-              lovarda_nev: c.lovarda_nev,
-              jelentkezett: !!c.jelentkezett,
-            },
-          }));
+          id: `verseny-${c.verseny_id}`,
+          title: `🏆 ${c.nev} (${c.lovarda_nev})`,
+          start: c.datum, // YYYY-MM-DD
+          end: addDays(new Date(c.datum), 1).toISOString().slice(0, 10),
+          allDay: true,
+          editable: false,
+          extendedProps: {
+            category: "competition",
+            verseny_id: c.verseny_id,
+            nev: c.nev,
+            datum: c.datum,
+            lovarda_nev: c.lovarda_nev,
+            jelentkezett: !!c.jelentkezett,
+          },
+        }));
       } catch {
+        // ignore
       }
 
       successCallback([...normalized, ...competitions]);
@@ -631,59 +634,39 @@ function Calendar() {
   return (
     <div>
       <Header />
-      <main style={{ padding: "24px" }}>
-        <h1>Naptár</h1>
+      <main className="calendarPage">
+        <h1 className="calendarTitle">Naptár</h1>
 
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
-          }}
-          events={fetchEvents}
-          nowIndicator
-          height="auto"
-          selectable
-          selectMirror
-          select={openCreateModal}
-          slotDuration="00:05:00"
-          snapDuration="00:05:00"
-          slotLabelInterval="01:00"
-          editable
-          eventResizableFromStart
-          eventDrop={onEventChange}
-          eventResize={onEventChange}
-          eventClick={openEditModal}
-        />
+        <div className="calendar">
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,timeGridDay",
+            }}
+            events={fetchEvents}
+            nowIndicator
+            height="auto"
+            selectable
+            selectMirror
+            select={openCreateModal}
+            slotDuration="00:05:00"
+            snapDuration="00:05:00"
+            slotLabelInterval="01:00"
+            editable
+            eventResizableFromStart
+            eventDrop={onEventChange}
+            eventResize={onEventChange}
+            eventClick={openEditModal}
+          />
+        </div>
 
         {modalOpen && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.4)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 16,
-              zIndex: 9999,
-            }}
-            onClick={closeModal}
-          >
-            <div
-              style={{
-                background: "white",
-                borderRadius: 12,
-                padding: 16,
-                width: "100%",
-                maxWidth: 560,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 style={{ marginTop: 0 }}>
+          <div className="calModalOverlay" onClick={closeModal}>
+            <div className="calModal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="calModalTitle">
                 {current?.category === "competition"
                   ? "Verseny"
                   : modalMode === "create"
@@ -693,19 +676,19 @@ function Calendar() {
 
               {/* Verseny kattintás */}
               {current?.category === "competition" ? (
-                <div style={{ display: "grid", gap: 10 }}>
+                <div className="calModalGrid">
                   <div>
                     <strong>{current.nev}</strong>
-                    <div style={{ opacity: 0.8 }}>{current.lovarda_nev}</div>
-                    <div style={{ marginTop: 6 }}>Dátum: {current.datum}</div>
+                    <div className="calMuted">{current.lovarda_nev}</div>
+                    <div className="calSpacerTop">Dátum: {current.datum}</div>
                     {current.jelentkezett && (
-                      <div style={{ marginTop: 8 }}>✔ Már jelentkeztél</div>
+                      <div className="calSpacerTop">✔ Már jelentkeztél</div>
                     )}
                   </div>
 
                   {/* Ló választás csak jelentkezéshez */}
                   {canSignupCompetition && !current.jelentkezett && (
-                    <div style={{ display: "grid", gap: 6 }}>
+                    <div className="calField">
                       <span>Ló kiválasztása (opcionális)</span>
                       <select
                         value={competitionHorseId}
@@ -721,25 +704,25 @@ function Calendar() {
                     </div>
                   )}
 
-                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
-                    <button onClick={closeModal} style={{ padding: "8px 12px" }}>
+                  <div className="calActions">
+                    <button className="calBtn calBtnGhost" onClick={closeModal}>
                       Bezárás
                     </button>
 
                     {user?.szerepkor === "lovarda_vezeto" && (
-                      <button onClick={deleteCompetition} style={{ padding: "8px 12px" }}>
+                      <button className="calBtn calBtnDanger" onClick={deleteCompetition}>
                         Törlés
                       </button>
                     )}
 
                     {canSignupCompetition && !current.jelentkezett && (
-                      <button onClick={signupToCompetition} style={{ padding: "8px 12px" }}>
+                      <button className="calBtn calBtnPrimary" onClick={signupToCompetition}>
                         Jelentkezés
                       </button>
                     )}
 
                     {canSignupCompetition && current.jelentkezett && (
-                      <button onClick={withdrawFromCompetition} style={{ padding: "8px 12px" }}>
+                      <button className="calBtn calBtnPrimary" onClick={withdrawFromCompetition}>
                         Jelentkezés visszavonása
                       </button>
                     )}
@@ -747,8 +730,8 @@ function Calendar() {
                 </div>
               ) : (
                 <>
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <label style={{ display: "grid", gap: 6 }}>
+                  <div className="calModalGrid">
+                    <label className="calField">
                       <span>Típus</span>
                       <select
                         value={type}
@@ -765,7 +748,7 @@ function Calendar() {
 
                     {/* Ló csak pálya/teendőhöz */}
                     {type !== "verseny" && (
-                      <label style={{ display: "grid", gap: 6 }}>
+                      <label className="calField">
                         <span>Ló (opcionális)</span>
                         <select value={horseId} onChange={(e) => setHorseId(e.target.value)}>
                           <option value="">— nincs kiválasztva —</option>
@@ -780,7 +763,7 @@ function Calendar() {
 
                     {/* Leírás: teendőnél; Versenynél: verseny neve */}
                     {type !== "palya" && (
-                      <label style={{ display: "grid", gap: 6 }}>
+                      <label className="calField">
                         <span>{type === "verseny" ? "Verseny neve" : "Leírás / cím"}</span>
                         <input
                           value={title}
@@ -790,8 +773,8 @@ function Calendar() {
                       </label>
                     )}
 
-                    <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr" }}>
-                      <label style={{ display: "grid", gap: 6 }}>
+                    <div className="calTwoCols">
+                      <label className="calField">
                         <span>Mettől</span>
                         <input
                           type="datetime-local"
@@ -800,7 +783,7 @@ function Calendar() {
                         />
                       </label>
 
-                      <label style={{ display: "grid", gap: 6 }}>
+                      <label className="calField">
                         <span>Meddig</span>
                         <input
                           type="datetime-local"
@@ -812,34 +795,32 @@ function Calendar() {
                     </div>
 
                     {type === "verseny" && (
-                      <div style={{ fontSize: 12, opacity: 0.75 }}>
+                      <div className="calHint">
                         A verseny a kiválasztott <strong>nap</strong> alapján jön létre (all-day esemény).
                       </div>
                     )}
                   </div>
 
-                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
-                    <button onClick={closeModal} style={{ padding: "8px 12px" }}>
+                  <div className="calActions">
+                    <button className="calBtn calBtnGhost" onClick={closeModal}>
                       Mégse
                     </button>
 
                     {modalMode === "edit" && (
-                      <button onClick={deleteCurrent} style={{ padding: "8px 12px" }}>
+                      <button className="calBtn calBtnDanger" onClick={deleteCurrent}>
                         Igen, törlés
                       </button>
                     )}
 
                     <button
+                      className="calBtn calBtnPrimary"
                       onClick={modalMode === "create" ? createFromModal : saveEditFromModal}
-                      style={{ padding: "8px 12px" }}
                     >
                       Mentés
                     </button>
                   </div>
 
-                  <p style={{ marginTop: 10, marginBottom: 0, opacity: 0.7, fontSize: 12 }}>
-                    Tipp: drag&drop / resize működik.
-                  </p>
+                  <p className="calTip">Tipp: drag&drop / resize működik.</p>
                 </>
               )}
             </div>

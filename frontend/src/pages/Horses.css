@@ -1,0 +1,276 @@
+.horsesPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 800px at 15% 10%, rgba(255, 245, 231, 0.95), rgba(255, 245, 231, 0.7)),
+    radial-gradient(900px 600px at 80% 20%, rgba(246, 228, 198, 0.85), rgba(246, 228, 198, 0.35)),
+    linear-gradient(180deg, #f7efe2 0%, #f2e6d4 100%);
+}
+
+.horsesMain {
+  padding: 24px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.horsesHeader {
+  margin: 10px 0 18px;
+  padding: 18px 18px 14px;
+  border-radius: 16px;
+  background: rgba(255, 250, 244, 0.72);
+  border: 1px solid rgba(137, 95, 51, 0.22);
+  box-shadow: 0 8px 24px rgba(63, 39, 18, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.horsesTitle {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0.2px;
+  color: #3f2712;
+}
+
+
+.horsesAlert {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  box-shadow: 0 10px 26px rgba(63, 39, 18, 0.10);
+}
+
+.horsesAlertSuccess {
+  background: #e7f6ea;
+  border-color: rgba(40, 140, 70, 0.35);
+  color: #1f5c33;
+}
+
+.horsesAlertError {
+  background: #ffe8e8;
+  border-color: rgba(180, 60, 60, 0.35);
+  color: #7a2a2a;
+}
+
+.horsesCard {
+  border-radius: 18px;
+  border: 1px solid rgba(137, 95, 51, 0.25);
+  background: rgba(255, 252, 248, 0.82);
+  box-shadow:
+    0 14px 40px rgba(63, 39, 18, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  padding: 18px;
+  margin-top: 14px;
+}
+
+.cardHeader {
+  margin-bottom: 12px;
+}
+
+.cardTitle {
+  margin: 0;
+  color: #3f2712;
+  font-size: 20px;
+}
+
+.cardHint {
+  margin: 6px 0 0;
+  color: rgba(63, 39, 18, 0.65);
+  font-size: 13px;
+}
+
+.horsesForm {
+  display: grid;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-weight: 700;
+  color: rgba(63, 39, 18, 0.85);
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.fieldInput {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(137, 95, 51, 0.28);
+  background: rgba(255, 255, 255, 0.86);
+  padding: 12px 12px;
+  font-size: 14px;
+  outline: none;
+  color: #3f2712;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.fieldInput::placeholder {
+  color: rgba(63, 39, 18, 0.45);
+}
+
+.fieldInput:focus {
+  border-color: rgba(137, 95, 51, 0.55);
+  box-shadow:
+    0 0 0 4px rgba(137, 95, 51, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.horsesActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.horsesActionsSplit {
+  justify-content: space-between;
+}
+
+.btn {
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
+  user-select: none;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnPrimary {
+  background: linear-gradient(180deg, #7a4a24 0%, #5a3418 100%);
+  color: #fff7ee;
+  border-color: rgba(63, 39, 18, 0.25);
+  box-shadow: 0 10px 22px rgba(63, 39, 18, 0.18);
+}
+
+.btnPrimary:hover {
+  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.22);
+}
+
+.btnSoft {
+  background: rgba(246, 232, 212, 0.85);
+  color: #3f2712;
+  border-color: rgba(137, 95, 51, 0.26);
+}
+
+.btnSoft:hover {
+  background: rgba(246, 232, 212, 0.95);
+}
+
+.btnGhost {
+  background: transparent;
+  color: rgba(63, 39, 18, 0.9);
+  border-color: rgba(137, 95, 51, 0.28);
+}
+
+.btnGhost:hover {
+  background: rgba(246, 232, 212, 0.5);
+}
+
+.btnDanger {
+  background: linear-gradient(180deg, #a94444 0%, #7e2f2f 100%);
+  color: #fff3f3;
+  border-color: rgba(122, 42, 42, 0.35);
+  box-shadow: 0 10px 22px rgba(63, 39, 18, 0.14);
+}
+
+.btnDanger:hover {
+  box-shadow: 0 14px 28px rgba(63, 39, 18, 0.18);
+}
+
+.horsesEmpty {
+  margin: 10px 0 0;
+  color: rgba(63, 39, 18, 0.7);
+}
+
+.horsesList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 12px;
+}
+
+.horseItem {
+  border-radius: 16px;
+  border: 1px solid rgba(137, 95, 51, 0.18);
+  background: rgba(246, 232, 212, 0.55);
+  padding: 12px;
+}
+
+.horseRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.horseText {
+  display: grid;
+  gap: 4px;
+}
+
+.horseName {
+  font-weight: 900;
+  color: #3f2712;
+  font-size: 16px;
+}
+
+.horseMeta {
+  font-weight: 700;
+  color: rgba(63, 39, 18, 0.75);
+}
+
+.horseSub {
+  font-size: 13px;
+}
+
+.horseDate {
+  color: rgba(63, 39, 18, 0.75);
+  font-weight: 700;
+}
+
+.horseMuted {
+  color: rgba(63, 39, 18, 0.55);
+}
+
+.horseButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+
+.editBox {
+  display: grid;
+  gap: 12px;
+}
+
+.editGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 860px) {
+  .editGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .horsesMain {
+    padding: 16px;
+  }
+}

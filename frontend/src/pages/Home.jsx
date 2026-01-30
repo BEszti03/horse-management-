@@ -179,46 +179,87 @@ function Home() {
 
   const competitionsTitle =
     role === "lovarda_vezeto"
-      ? "Saját versenyeid a héten:"
-      : "Versenyek, amikre jelentkeztél a héten:";
+      ? "Saját versenyeid a héten"
+      : "Versenyek, amikre jelentkeztél a héten";
 
   return (
-    <div>
+    <div className="homePage">
       <Header />
 
-      <main className="main-layout">
-        <section className="content">
-          <h1>Hello {user?.nev || "Felhasználó"}!</h1>
+      <main className="homeMain">
+        <div className="homeHeader">
+          <h1 className="homeTitle">Hello {user?.nev || "Felhasználó"}!</h1>
+          <p className="homeSubtitle">Nézd át a heti teendőket és versenyeket egy helyen.</p>
+        </div>
 
-          <div className="home-weekly">
-            <h2>Közelgő események a héten:</h2>
-
-            <h3 className="home-subtitle">Teendők</h3>
-            {weeklyTodos.length === 0 ? (
-              <p className="muted">Nincs teendőd erre a hétre.</p>
-            ) : (
-              <ul className="weekly-todo-list">
-                {weeklyTodos.map((t) => (
-                  <li key={t.id}>{t.label}</li>
-                ))}
-              </ul>
-            )}
-
-            <h3 className="home-subtitle">{competitionsTitle}</h3>
-            {weeklyCompetitions.length === 0 ? (
-              <p className="muted">
-                {role === "lovarda_vezeto"
-                  ? "Nincs saját versenyed ezen a héten."
-                  : "Nincs jelentkezett versenyed ezen a héten."}
+        <section className="homeGrid">
+          <div className="homeCard">
+            <div className="homeCardHeader">
+              <h2 className="homeCardTitle">Közelgő események a héten</h2>
+              <p className="homeCardHint">
+                Csak az aktuális hét (hétfő–vasárnap) eseményei.
               </p>
-            ) : (
-              <ul className="weekly-todo-list">
-                {weeklyCompetitions.map((c) => (
-                  <li key={c.id}>{c.label}</li>
-                ))}
-              </ul>
-            )}
+            </div>
+
+            <div className="homeSection">
+              <h3 className="homeSectionTitle">Teendők</h3>
+
+              {weeklyTodos.length === 0 ? (
+                <p className="homeMuted">Nincs teendőd erre a hétre.</p>
+              ) : (
+                <ul className="homeList">
+                  {weeklyTodos.map((t) => (
+                    <li className="homeListItem" key={t.id}>
+                      <span className="homeBullet" aria-hidden="true" />
+                      <span className="homeItemText">{t.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="homeDivider" />
+
+            <div className="homeSection">
+              <h3 className="homeSectionTitle">{competitionsTitle}</h3>
+
+              {weeklyCompetitions.length === 0 ? (
+                <p className="homeMuted">
+                  {role === "lovarda_vezeto"
+                    ? "Nincs saját versenyed ezen a héten."
+                    : "Nincs jelentkezett versenyed ezen a héten."}
+                </p>
+              ) : (
+                <ul className="homeList">
+                  {weeklyCompetitions.map((c) => (
+                    <li className="homeListItem" key={c.id}>
+                      <span className="homeBullet" aria-hidden="true" />
+                      <span className="homeItemText">{c.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
+
+          <aside className="homeSide">
+            <div className="homeMiniCard">
+              <h3 className="homeMiniTitle">Gyors összegzés</h3>
+              <div className="homeStats">
+                <div className="homeStat">
+                  <div className="homeStatNumber">{weeklyTodos.length}</div>
+                  <div className="homeStatLabel">eheti teendők</div>
+                </div>
+                <div className="homeStat">
+                  <div className="homeStatNumber">{weeklyCompetitions.length}</div>
+                  <div className="homeStatLabel">verseny</div>
+                </div>
+              </div>
+              <p className="homeMiniHint">
+                A részletekhez menj a Naptár / Verseny menüpontra.
+              </p>
+            </div>
+          </aside>
         </section>
       </main>
     </div>

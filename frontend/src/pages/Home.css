@@ -1,45 +1,201 @@
-.main-layout {
-  background-color: rgb(173, 160, 142);
-  display: flex;
-  padding: 24px;
-  gap: 24px;
+.homePage {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 800px at 15% 10%, rgba(255, 245, 231, 0.95), rgba(255, 245, 231, 0.7)),
+    radial-gradient(900px 600px at 80% 20%, rgba(246, 228, 198, 0.85), rgba(246, 228, 198, 0.35)),
+    linear-gradient(180deg, #f7efe2 0%, #f2e6d4 100%);
 }
 
-.content {
-  flex: 1;
+.homeMain {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.homeHeader {
+  margin: 10px 0 18px;
+  padding: 18px 18px 14px;
+  border-radius: 16px;
+  background: rgba(255, 250, 244, 0.72);
+  border: 1px solid rgba(137, 95, 51, 0.22);
+  box-shadow: 0 8px 24px rgba(63, 39, 18, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.homeTitle {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0.2px;
+  color: #3f2712;
+}
+
+.homeSubtitle {
+  margin: 6px 0 0;
+  color: rgba(63, 39, 18, 0.75);
+  font-size: 14px;
+}
+
+
+.homeGrid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  .homeGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.homeCard {
+  border-radius: 18px;
+  border: 1px solid rgba(137, 95, 51, 0.25);
+  background: rgba(255, 252, 248, 0.82);
+  box-shadow:
+    0 14px 40px rgba(63, 39, 18, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  padding: 18px;
+}
+
+.homeCardHeader {
+  margin-bottom: 10px;
+}
+
+.homeCardTitle {
+  margin: 0;
+  color: #3f2712;
+  font-size: 20px;
+}
+
+.homeCardHint {
+  margin: 6px 0 0;
+  color: rgba(63, 39, 18, 0.65);
+  font-size: 13px;
+}
+
+.homeSection {
+  margin-top: 12px;
+}
+
+.homeSectionTitle {
+  margin: 0 0 8px;
+  color: rgba(63, 39, 18, 0.9);
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+
+.homeDivider {
+  height: 1px;
+  background: rgba(137, 95, 51, 0.22);
+  margin: 14px 0;
+  border-radius: 999px;
+}
+
+
+.homeMuted {
+  margin: 0;
+  color: rgba(63, 39, 18, 0.65);
+}
+
+.homeList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.homeListItem {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(246, 232, 212, 0.55);
+  border: 1px solid rgba(137, 95, 51, 0.18);
+}
+
+.homeBullet {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-top: 4px;
+  background: linear-gradient(180deg, #7a4a24 0%, #5a3418 100%);
+  box-shadow: 0 6px 14px rgba(63, 39, 18, 0.18);
+}
+
+.homeItemText {
+  color: #3f2712;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+
+.homeSide {
+  display: grid;
+  gap: 14px;
+}
+
+.homeMiniCard {
+  border-radius: 18px;
+  border: 1px solid rgba(137, 95, 51, 0.25);
+  background: rgba(255, 252, 248, 0.82);
+  box-shadow:
+    0 14px 40px rgba(63, 39, 18, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  padding: 16px;
+}
+
+.homeMiniTitle {
+  margin: 0;
+  color: #3f2712;
+  font-size: 16px;
+}
+
+.homeStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.homeStat {
+  border-radius: 16px;
+  border: 1px solid rgba(137, 95, 51, 0.18);
+  background: rgba(246, 232, 212, 0.55);
+  padding: 12px;
   text-align: center;
 }
 
-.home-weekly {
-  margin: 18px auto 0;
-  max-width: 520px;
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
-  padding: 14px 16px;
+.homeStatNumber {
+  font-size: 22px;
+  font-weight: 900;
+  color: #3f2712;
 }
 
-.home-weekly h2 {
-  margin: 0 0 10px;
-  font-size: 1.1rem;
+.homeStatLabel {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(63, 39, 18, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
 }
 
-.home-subtitle {
-  margin: 14px 0 6px;
-  font-size: 1rem;
-  text-align: left;
+.homeMiniHint {
+  margin: 12px 0 0;
+  color: rgba(63, 39, 18, 0.62);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
-.weekly-todo-list {
-  margin: 0;
-  padding-left: 18px;
-  text-align: left;
-}
-
-.weekly-todo-list li {
-  margin: 6px 0;
-}
-
-.muted {
-  margin: 0;
-  opacity: 0.75;
+@media (max-width: 560px) {
+  .homeMain {
+    padding: 16px;
+  }
 }

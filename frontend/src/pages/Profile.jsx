@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { apiFetch } from "../utils/api";
+import "./Profile.css";
 
 function Profile() {
   const navigate = useNavigate();
@@ -42,7 +43,6 @@ function Profile() {
         setSzerepkor(meData.user.szerepkor || "lovas");
 
         const stablesData = await apiFetch("/api/stables", {
-          // ez nyilvános endpoint is lehet, de a helper tokennel sem árt
           headers: { "Content-Type": "application/json" },
         });
         setStables(stablesData?.stables || []);
@@ -114,72 +114,132 @@ function Profile() {
   }
 
   return (
-    <div>
+    <div className="profilePage">
       <Header />
-      <main style={{ padding: 24, maxWidth: 800, margin: "0 auto" }}>
-        <h1>Profil</h1>
 
-        {loading && <p>Betöltés...</p>}
+      <main className="profileMain">
+        <div className="profileHeader">
+          <h1 className="profileTitle">Profil</h1>
+          <p className="profileSubtitle">Személyes adatok és lovarda beállítások</p>
+        </div>
 
-        {success && <div style={{ background: "#d4edda", padding: 12 }}>{success}</div>}
-        {error && <div style={{ background: "#ffe6e6", padding: 12 }}>{error}</div>}
+        {loading && <p className="profileLoading">Betöltés...</p>}
+
+        {success && <div className="profileAlert profileAlertSuccess">{success}</div>}
+        {error && <div className="profileAlert profileAlertError">{error}</div>}
 
         {!loading && user && (
-          <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 12 }}>
+          <section className="profileCard">
             {!editMode ? (
               <>
-                <p><b>Név:</b> {user.nev}</p>
-                <p><b>Email:</b> {user.email}</p>
-                <p><b>Szerepkör:</b> {roleLabel(user.szerepkor)}</p>
-                <p><b>Lovarda:</b> {user.lovarda_nev || "Nincs beállítva"}</p>
+                <div className="profileInfoGrid">
+                  <div className="profileInfoRow">
+                    <span className="profileLabel">Név</span>
+                    <span className="profileValue">{user.nev}</span>
+                  </div>
+                  <div className="profileInfoRow">
+                    <span className="profileLabel">Email</span>
+                    <span className="profileValue">{user.email}</span>
+                  </div>
+                  <div className="profileInfoRow">
+                    <span className="profileLabel">Szerepkör</span>
+                    <span className="profileValue">{roleLabel(user.szerepkor)}</span>
+                  </div>
+                  <div className="profileInfoRow">
+                    <span className="profileLabel">Lovarda</span>
+                    <span className="profileValue">
+                      {user.lovarda_nev || <span className="profileMuted">Nincs beállítva</span>}
+                    </span>
+                  </div>
+                </div>
 
-                <button onClick={() => setEditMode(true)}>Profil szerkesztése</button>
+                <div className="profileActions">
+                  <button className="btn btnPrimary" onClick={() => setEditMode(true)}>
+                    Profil szerkesztése
+                  </button>
+                </div>
               </>
             ) : (
               <>
-                <label>
-                  Név
-                  <input value={nev} onChange={(e) => setNev(e.target.value)} />
-                </label>
-
-                <label>
-                  Szerepkör
-                  <select value={szerepkor} onChange={(e) => setSzerepkor(e.target.value)}>
-                    <option value="lovas">Lovas</option>
-                    <option value="lovarda_vezeto">Lovarda vezető</option>
-                  </select>
-                </label>
-
-                <label>
-                  Lovarda
-                  <select value={lovardaId} onChange={(e) => setLovardaId(e.target.value)}>
-                    <option value="">— nincs —</option>
-                    {stables.map((s) => (
-                      <option key={s.stable_id} value={s.stable_id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <button onClick={() => setShowAddStable(!showAddStable)}>
-                  Új lovarda felvitele
-                </button>
-
-                {showAddStable && (
-                  <>
+                <div className="profileForm">
+                  <label className="field">
+                    <span className="fieldLabel">Név</span>
                     <input
-                      placeholder="Lovarda neve"
-                      value={newStableName}
-                      onChange={(e) => setNewStableName(e.target.value)}
+                      className="fieldInput"
+                      value={nev}
+                      onChange={(e) => setNev(e.target.value)}
+                      placeholder="Add meg a neved"
+                      autoComplete="name"
                     />
-                    <button onClick={handleAddStable}>Hozzáadás</button>
-                  </>
-                )}
+                  </label>
 
-                <div style={{ marginTop: 12 }}>
-                  <button onClick={handleSave}>Mentés</button>
+                  <label className="field">
+                    <span className="fieldLabel">Szerepkör</span>
+                    <select
+                      className="fieldSelect"
+                      value={szerepkor}
+                      onChange={(e) => setSzerepkor(e.target.value)}
+                    >
+                      <option value="lovas">Lovas</option>
+                      <option value="lovarda_vezeto">Lovarda vezető</option>
+                    </select>
+                  </label>
+
+                  <label className="field">
+                    <span className="fieldLabel">Lovarda</span>
+                    <select
+                      className="fieldSelect"
+                      value={lovardaId}
+                      onChange={(e) => setLovardaId(e.target.value)}
+                    >
+                      <option value="">— nincs —</option>
+                      {stables.map((s) => (
+                        <option key={s.stable_id} value={s.stable_id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="fieldHint">
+                      Tipp: ha a lovardád nincs a listában, fel tudod venni.
+                    </span>
+                  </label>
+
+                  <div className="profileDivider" />
+
+                  <div className="profileInlineRow">
+                    <button
+                      className="btn btnSoft"
+                      onClick={() => setShowAddStable(!showAddStable)}
+                      type="button"
+                    >
+                      Új lovarda felvitele
+                    </button>
+                  </div>
+
+                  {showAddStable && (
+                    <div className="addStableBox">
+                      <div className="addStableRow">
+                        <input
+                          className="fieldInput"
+                          placeholder="Lovarda neve"
+                          value={newStableName}
+                          onChange={(e) => setNewStableName(e.target.value)}
+                        />
+                        <button className="btn btnPrimary" onClick={handleAddStable} type="button">
+                          Hozzáadás
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="profileActions profileActionsSplit">
+                  <button className="btn btnPrimary" onClick={handleSave} type="button">
+                    Mentés
+                  </button>
+
                   <button
+                    className="btn btnGhost"
                     onClick={() => {
                       setEditMode(false);
                       setNev(user.nev || "");
@@ -190,13 +250,14 @@ function Profile() {
                       setError("");
                       setSuccess("");
                     }}
+                    type="button"
                   >
                     Mégse
                   </button>
                 </div>
               </>
             )}
-          </div>
+          </section>
         )}
       </main>
     </div>
