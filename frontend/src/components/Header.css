@@ -6,8 +6,7 @@
   background: rgb(75, 54, 25);
 }
 
-.logo {
-  font-weight: bold;
-  font-size: 18px;
+.logo img {
+  height: 40px;
   cursor: pointer;
 }
