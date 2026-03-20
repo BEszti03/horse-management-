@@ -7,8 +7,14 @@ function Menu() {
   const containerRef = useRef(null);
   const navigate = useNavigate();
 
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch {
+    user = null;
+  }
+
   function handleLogout() {
-    // Teljes kijelentkezés
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("htm_logged_in");
@@ -17,14 +23,13 @@ function Menu() {
     navigate("/", { replace: true });
   }
 
-  // Kattintás a menün kívül -> zárjon be
   useEffect(() => {
     function handleClickOutside(event) {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
         setOpen(false);
       }
     }
-    // ESC lenyomása -> zárjon be
+
     function handleEsc(event) {
       if (event.key === "Escape") setOpen(false);
     }
@@ -61,6 +66,12 @@ function Menu() {
           <Link className="menu__item" to="/calendar" onClick={() => setOpen(false)}>
             Naptár
           </Link>
+
+          {user?.szerepkor === "admin" && (
+            <Link className="menu__item" to="/admin" onClick={() => setOpen(false)}>
+              Admin felület
+            </Link>
+          )}
 
           <button type="button" className="menu__item menu__logout" onClick={handleLogout}>
             Kijelentkezés

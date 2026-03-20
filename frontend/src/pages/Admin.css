@@ -1,0 +1,190 @@
+.adminPage {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7f1e7 0%, #efe3d1 100%);
+}
+
+.adminMain {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 20px 48px;
+}
+
+.adminHeader {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.adminTitle {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4b2e1f;
+}
+
+.adminSubtitle {
+  margin-top: 8px;
+  color: #7a5a44;
+  font-size: 1rem;
+}
+
+.adminAlert {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(75, 46, 31, 0.08);
+}
+
+.adminAlertSuccess {
+  background: #eef8f0;
+  color: #25613b;
+  border: 1px solid #cfe7d5;
+}
+
+.adminAlertError {
+  background: #fff1f1;
+  color: #9c2f2f;
+  border: 1px solid #f0c7c7;
+}
+
+.adminCard {
+  background: rgba(255, 252, 247, 0.92);
+  border: 1px solid rgba(120, 90, 68, 0.14);
+  border-radius: 22px;
+  padding: 22px;
+  margin-bottom: 22px;
+  box-shadow: 0 12px 28px rgba(75, 46, 31, 0.08);
+  backdrop-filter: blur(4px);
+}
+
+.adminSectionTitle {
+  margin: 0 0 16px;
+  font-size: 1.3rem;
+  color: #4b2e1f;
+}
+
+.adminList {
+  display: grid;
+  gap: 14px;
+}
+
+.adminRowCard {
+  background: #fffaf4;
+  border: 1px solid #eadbc7;
+  border-radius: 18px;
+  padding: 16px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.adminRowCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(75, 46, 31, 0.08);
+}
+
+.adminRowTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.adminRowBottom {
+  margin-top: 14px;
+}
+
+.adminRowInline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.adminPrimaryText {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3f281c;
+}
+
+.adminSecondaryText {
+  margin: 6px 0 0;
+  color: #7b614d;
+  font-size: 0.95rem;
+}
+
+.adminBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #ede0cf;
+  color: #5e3d2a;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.adminSelect {
+  width: 100%;
+  max-width: 240px;
+  padding: 11px 14px;
+  border: 1px solid #d9c3ab;
+  border-radius: 12px;
+  background: #fff;
+  color: #4b2e1f;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.adminSelect:focus {
+  border-color: #8b5e3c;
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.14);
+}
+
+.adminDeleteButton {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #7a2f2f;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.adminDeleteButton:hover {
+  background: #612424;
+  transform: translateY(-1px);
+}
+
+.adminDeleteButton:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .adminMain {
+    padding: 24px 14px 36px;
+  }
+
+  .adminTitle {
+    font-size: 1.8rem;
+  }
+
+  .adminRowTop,
+  .adminRowInline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adminBadge {
+    align-self: flex-start;
+  }
+
+  .adminSelect,
+  .adminDeleteButton {
+    width: 100%;
+    max-width: none;
+  }
+}

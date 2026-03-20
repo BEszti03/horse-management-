@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Notes from "./pages/Notes";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Admin from "./pages/Admin";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   return (
@@ -59,6 +61,14 @@ function App() {
               <Calendar />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/admin"
+          element={
+           <AdminRoute>
+            <Admin />
+            </AdminRoute>
+         }
         />
 
         <Route

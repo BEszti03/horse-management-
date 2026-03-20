@@ -14,7 +14,6 @@ function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [nev, setNev] = useState("");
   const [lovardaId, setLovardaId] = useState("");
-  const [szerepkor, setSzerepkor] = useState("lovas");
 
   const [showAddStable, setShowAddStable] = useState(false);
   const [newStableName, setNewStableName] = useState("");
@@ -40,7 +39,6 @@ function Profile() {
         setUser(meData.user);
         setNev(meData.user.nev || "");
         setLovardaId(meData.user.lovarda_id ?? "");
-        setSzerepkor(meData.user.szerepkor || "lovas");
 
         const stablesData = await apiFetch("/api/stables", {
           headers: { "Content-Type": "application/json" },
@@ -66,13 +64,30 @@ function Profile() {
         body: JSON.stringify({
           nev,
           lovarda_id: lovardaId === "" ? null : Number(lovardaId),
-          szerepkor,
         }),
       });
 
       setUser(data.user);
+      setNev(data.user?.nev || "");
+      setLovardaId(data.user?.lovarda_id ?? "");
       setSuccess("Sikeres mentés!");
       setEditMode(false);
+
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...parsedUser,
+              ...data.user,
+            })
+          );
+        } catch {
+          // nincs teendő
+        }
+      }
     } catch (err) {
       setError(err.message || "Mentési hiba.");
     }
@@ -102,15 +117,19 @@ function Profile() {
       });
       setStables(listData?.stables || []);
 
-      if (data?.stable?.stable_id) setLovardaId(String(data.stable.stable_id));
+      if (data?.stable?.stable_id) {
+        setLovardaId(String(data.stable.stable_id));
+      }
     } catch (err) {
       setError(err.message || "Lovarda felvitel hiba.");
     }
   }
 
   function roleLabel(r) {
+    if (r === "admin") return "Admin";
     if (r === "lovarda_vezeto") return "Lovarda vezető";
-    return "Lovas";
+    if (r === "lovas") return "Lovas";
+    return r || "Nincs megadva";
   }
 
   return (
@@ -137,14 +156,17 @@ function Profile() {
                     <span className="profileLabel">Név</span>
                     <span className="profileValue">{user.nev}</span>
                   </div>
+
                   <div className="profileInfoRow">
                     <span className="profileLabel">Email</span>
                     <span className="profileValue">{user.email}</span>
                   </div>
+
                   <div className="profileInfoRow">
                     <span className="profileLabel">Szerepkör</span>
                     <span className="profileValue">{roleLabel(user.szerepkor)}</span>
                   </div>
+
                   <div className="profileInfoRow">
                     <span className="profileLabel">Lovarda</span>
                     <span className="profileValue">
@@ -171,18 +193,6 @@ function Profile() {
                       placeholder="Add meg a neved"
                       autoComplete="name"
                     />
-                  </label>
-
-                  <label className="field">
-                    <span className="fieldLabel">Szerepkör</span>
-                    <select
-                      className="fieldSelect"
-                      value={szerepkor}
-                      onChange={(e) => setSzerepkor(e.target.value)}
-                    >
-                      <option value="lovas">Lovas</option>
-                      <option value="lovarda_vezeto">Lovarda vezető</option>
-                    </select>
                   </label>
 
                   <label className="field">
@@ -244,7 +254,6 @@ function Profile() {
                       setEditMode(false);
                       setNev(user.nev || "");
                       setLovardaId(user.lovarda_id ?? "");
-                      setSzerepkor(user.szerepkor || "lovas");
                       setShowAddStable(false);
                       setNewStableName("");
                       setError("");

@@ -4,8 +4,6 @@ const pool = require("../config/db");
 
 const router = express.Router();
 
-const ALLOWED_ROLES = new Set(["lovas", "lovarda_vezeto"]);
-
 // GET /api/users/me
 router.get("/me", requireAuth, async (req, res) => {
   try {
@@ -25,7 +23,9 @@ router.get("/me", requireAuth, async (req, res) => {
       [userId]
     );
 
-    if (!q.rows.length) return res.status(404).json({ message: "Felhasználó nem található." });
+    if (!q.rows.length) {
+      return res.status(404).json({ message: "Felhasználó nem található." });
+    }
 
     res.json({ user: q.rows[0] });
   } catch (err) {
@@ -34,20 +34,14 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 });
 
-// PUT /api/users/me  (név + lovarda_id + szerepkor)
+// PUT /api/users/me
 router.put("/me", requireAuth, async (req, res) => {
   try {
     const userId = req.user.felhasznalo_id;
-    const { nev, lovarda_id, szerepkor } = req.body;
+    const { nev, lovarda_id } = req.body;
 
     if (!nev || !String(nev).trim()) {
       return res.status(400).json({ message: "A név megadása kötelező." });
-    }
-
-    if (!szerepkor || !ALLOWED_ROLES.has(String(szerepkor))) {
-      return res.status(400).json({
-        message: "Érvénytelen szerepkör. Csak: lovas, lovarda_vezeto",
-      });
     }
 
     const lovardaIdValue =
@@ -60,9 +54,10 @@ router.put("/me", requireAuth, async (req, res) => {
     }
 
     if (lovardaIdValue !== null) {
-      const exists = await pool.query("SELECT lovarda_id FROM lovarda WHERE lovarda_id = $1", [
-        lovardaIdValue,
-      ]);
+      const exists = await pool.query(
+        "SELECT lovarda_id FROM lovarda WHERE lovarda_id = $1",
+        [lovardaIdValue]
+      );
       if (!exists.rows.length) {
         return res.status(400).json({ message: "A kiválasztott lovarda nem létezik." });
       }
@@ -70,9 +65,9 @@ router.put("/me", requireAuth, async (req, res) => {
 
     await pool.query(
       `UPDATE felhasznalo
-       SET nev = $1, lovarda_id = $2, szerepkor = $3
-       WHERE felhasznalo_id = $4`,
-      [String(nev).trim(), lovardaIdValue, String(szerepkor), userId]
+       SET nev = $1, lovarda_id = $2
+       WHERE felhasznalo_id = $3`,
+      [String(nev).trim(), lovardaIdValue, userId]
     );
 
     const q = await pool.query(

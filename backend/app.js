@@ -16,6 +16,7 @@ app.use("/api/calendar", require("./routes/calendar"));
 app.use("/api/competitions", require("./routes/competitions"));
 app.use("/api/stables", require("./routes/stables"));
 app.use("/api/notes", require("./routes/notes"));
+app.use("/api/admin", require("./routes/admin"));
 
 app.listen(PORT, () => {
   console.log(`Backend fut: http://localhost:${PORT}`);
