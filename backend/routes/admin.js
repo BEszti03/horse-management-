@@ -76,7 +76,7 @@ router.get("/stables", async (_req, res) => {
   }
 });
 
-//lovarda törlése lovasokkal együtt
+//lovarda törlése
 router.delete("/stables/:id", async (req, res) => {
   try {
     const stableId = Number(req.params.id);
@@ -94,23 +94,10 @@ router.delete("/stables/:id", async (req, res) => {
       return res.status(404).json({ message: "Lovarda nem található." });
     }
 
-    const adminInStable = await pool.query(
-      `SELECT felhasznalo_id, nev, email
-       FROM felhasznalo
-       WHERE lovarda_id = $1 AND szerepkor = 'admin'`,
-      [stableId]
-    );
-
-    if (adminInStable.rows.length) {
-      return res.status(400).json({
-        message: "A lovarda nem törölhető, mert admin felhasználó tartozik hozzá.",
-      });
-    }
-
     await pool.query("DELETE FROM lovarda WHERE lovarda_id = $1", [stableId]);
 
     return res.json({
-      message: "Lovarda és a kapcsolódó adatok törölve.",
+      message: "Lovarda törölve.",
       deletedStable: exists.rows[0],
     });
   } catch (err) {

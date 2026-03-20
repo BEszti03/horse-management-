@@ -53,27 +53,27 @@ function Admin() {
     }
   }
 
-  async function handleDeleteStable(stableId, stableName) {
-    const confirmed = window.confirm(
-      `Biztosan törölni szeretnéd ezt a lovardát: "${stableName}"?\n\nA hozzá tartozó felhasználók és lovak is törlődni fognak.`
-    );
+async function handleDeleteStable(stableId, stableName) {
+  const confirmed = window.confirm(
+    `Biztosan törölni szeretnéd ezt a lovardát: "${stableName}"?\n\nA felhasználók megmaradnak, csak a lovarda kapcsolat fog megszűnni náluk.`
+  );
 
-    if (!confirmed) return;
+  if (!confirmed) return;
 
-    try {
-      setError("");
-      setSuccess("");
+  try {
+    setError("");
+    setSuccess("");
 
-      await apiFetch(`/api/admin/stables/${stableId}`, {
-        method: "DELETE",
-      });
+    const data = await apiFetch(`/api/admin/stables/${stableId}`, {
+      method: "DELETE",
+    });
 
-      setSuccess("Lovarda és a kapcsolódó adatok sikeresen törölve.");
-      loadAll();
-    } catch (err) {
-      setError(err.message || "Törlési hiba.");
-    }
+    setSuccess(data.message || "Lovarda sikeresen törölve.");
+    loadAll();
+  } catch (err) {
+    setError(err.message || "Törlési hiba.");
   }
+}
 
   return (
     <div className="adminPage">
