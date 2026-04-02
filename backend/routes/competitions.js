@@ -236,4 +236,65 @@ router.delete("/:id", requireAuth, async (req, res) => {
   }
 });
 
+/* =========================
+   GET – versenyre jelentkezők listája
+   (admin: összes, lovarda_vezeto: saját lovarda)
+========================= */
+router.get("/entries", requireAuth, async (req, res) => {
+  const { szerepkor, felhasznalo_id } = req.user;
+
+  if (szerepkor !== "admin" && szerepkor !== "lovarda_vezeto") {
+    return res.status(403).json({ error: "Nincs jogosultság" });
+  }
+
+  try {
+    let query = `
+      SELECT
+        v.verseny_id,
+        v.nev AS verseny_nev,
+        v.datum::text AS datum,
+        f.felhasznalo_id,
+        f.nev AS felhasznalo_nev,
+        f.email,
+        l.lo_id,
+        l.nev AS lo_nev,
+        lv.nev AS lovarda_nev
+      FROM verseny v
+      JOIN lovarda lv ON lv.lovarda_id = v.lovarda_id
+      JOIN verseny_felhasznalo vf ON vf.verseny_id = v.verseny_id
+      LEFT JOIN lo l 
+        ON l.felhasznalo_id = vf.felhasznalo_id
+       AND l.lo_id IN (
+         SELECT vl.lo_id
+         FROM verseny_lo vl
+         WHERE vl.verseny_id = v.verseny_id
+       )
+      JOIN felhasznalo f ON f.felhasznalo_id = vf.felhasznalo_id
+    `;
+
+    const params = [];
+
+    if (szerepkor === "lovarda_vezeto") {
+      query += `
+        WHERE v.lovarda_id = (
+          SELECT lovarda_id
+          FROM felhasznalo
+          WHERE felhasznalo_id = $1
+        )
+      `;
+      params.push(felhasznalo_id);
+    }
+
+    query += `
+      ORDER BY v.datum, v.nev, f.nev, l.nev
+    `;
+
+    const result = await pool.query(query, params);
+    return res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Hiba a jelentkezők lekérésekor" });
+  }
+});
+
 module.exports = router;

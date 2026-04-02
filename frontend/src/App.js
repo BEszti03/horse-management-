@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Horses from "./pages/Horses";
 import Calendar from "./pages/Calendar";
+import Competitions from "./pages/Competitions";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Notes from "./pages/Notes";
@@ -59,6 +60,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Calendar />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/competitions"
+          element={
+            <ProtectedRoute>
+              <Competitions />
             </ProtectedRoute>
           }
         />

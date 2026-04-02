@@ -67,6 +67,12 @@ function Menu() {
             Naptár
           </Link>
 
+          {(user?.szerepkor === "admin" || user?.szerepkor === "lovarda_vezeto") && (
+          <Link className="menu__item" to="/competitions" onClick={() => setOpen(false)}>
+             Versenyek
+          </Link>
+          )}
+
           {user?.szerepkor === "admin" && (
             <Link className="menu__item" to="/admin" onClick={() => setOpen(false)}>
               Admin felület
