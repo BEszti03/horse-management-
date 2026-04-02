@@ -120,6 +120,26 @@ function Profile() {
       if (data?.stable?.stable_id) {
         setLovardaId(String(data.stable.stable_id));
       }
+
+      if (data?.user) {
+        setUser((prev) => ({ ...prev, ...data.user, lovarda_nev: data?.stable?.name || prev?.lovarda_nev }));
+        setNev(data.user.nev || "");
+        setLovardaId(data.user.lovarda_id ?? "");
+      }
+
+      if (data?.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      if (data?.user) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...data.user,
+            lovarda_nev: data?.stable?.name || data?.user?.lovarda_nev || null,
+          })
+        );
+      }
     } catch (err) {
       setError(err.message || "Lovarda felvitel hiba.");
     }

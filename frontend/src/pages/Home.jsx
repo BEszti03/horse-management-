@@ -25,6 +25,14 @@ function toYMD(date) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function formatDateHu(date) {
+  return new Intl.DateTimeFormat("hu-HU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 function labelTipus(tipus) {
   const x = String(tipus || "egyeb").toLowerCase();
   if (x === "patkolas") return "Patkolás";
@@ -141,18 +149,16 @@ function Home() {
               jelentkezett: !!c.jelentkezett,
             };
           })
-          // csak aktuális hét
-          .filter((c) => {
-            const t = c.date.getTime();
-            return t >= startTs && t < endTs;
-          })
           // szerepkör szerinti szűrés
           .filter((c) => {
             if (role === "lovas") {
               return c.jelentkezett;
             }
             if (role === "lovarda_vezeto") {
+              const t = c.date.getTime();
+              const isThisWeek = t >= startTs && t < endTs;
               return (
+                isThisWeek &&
                 myStableId != null &&
                 c.lovardaId != null &&
                 String(c.lovardaId) === String(myStableId)
@@ -165,7 +171,7 @@ function Home() {
             id: c.id,
             label: `Verseny - ${c.name}${
               c.lovardaName ? ` (${c.lovardaName})` : ""
-            }`,
+            } (${formatDateHu(c.date)})`,
           }));
 
         setWeeklyCompetitions(competitions);
@@ -180,7 +186,7 @@ function Home() {
   const competitionsTitle =
     role === "lovarda_vezeto"
       ? "Saját versenyeid a héten"
-      : "Versenyek, amikre jelentkeztél a héten";
+      : "Versenyek, amikre jelentkeztél";
 
   return (
     <div className="homePage">
@@ -227,7 +233,7 @@ function Home() {
                 <p className="homeMuted">
                   {role === "lovarda_vezeto"
                     ? "Nincs saját versenyed ezen a héten."
-                    : "Nincs jelentkezett versenyed ezen a héten."}
+                    : "Nincs jelentkezett versenyed."}
                 </p>
               ) : (
                 <ul className="homeList">
