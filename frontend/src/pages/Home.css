@@ -136,6 +136,13 @@
   line-height: 1.35;
 }
 
+.homeItemMeta {
+  display: block;
+  margin-top: 4px;
+  color: rgba(63, 39, 18, 0.68);
+  font-size: 12px;
+}
+
 
 .homeSide {
   display: grid;

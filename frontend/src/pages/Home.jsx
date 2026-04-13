@@ -33,6 +33,13 @@ function formatDateHu(date) {
   }).format(date);
 }
 
+function formatTimeHu(date) {
+  return new Intl.DateTimeFormat("hu-HU", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
 function labelTipus(tipus) {
   const x = String(tipus || "egyeb").toLowerCase();
   if (x === "patkolas") return "Patkolás";
@@ -96,10 +103,16 @@ function Home() {
             const p = ev.extendedProps || {};
             const tipus = labelTipus(p.type);
             const horseOrDesc = p.lo_nev || p.raw_leiras || ev.title;
+            const startDate = ev.start ? new Date(ev.start) : null;
+            const hasValidStart = startDate && !Number.isNaN(startDate.getTime());
+            const hasSpecificTime = hasValidStart && !(startDate.getHours() === 0 && startDate.getMinutes() === 0);
             return {
               id: ev.id,
               label: `${tipus} - ${horseOrDesc}`,
               start: ev.start,
+              dateLabel: hasValidStart
+                ? `${formatDateHu(startDate)}${hasSpecificTime ? ` ${formatTimeHu(startDate)}` : ""}`
+                : "",
             };
           })
           .sort((a, b) => new Date(a.start) - new Date(b.start));
@@ -217,7 +230,10 @@ function Home() {
                   {weeklyTodos.map((t) => (
                     <li className="homeListItem" key={t.id}>
                       <span className="homeBullet" aria-hidden="true" />
-                      <span className="homeItemText">{t.label}</span>
+                      <div>
+                        <span className="homeItemText">{t.label}</span>
+                        {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
+                      </div>
                     </li>
                   ))}
                 </ul>
