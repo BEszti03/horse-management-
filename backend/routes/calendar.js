@@ -123,12 +123,12 @@ router.get("/", requireAuth, async (req, res) => {
 
     const teendoEvents = teendok.rows.map((t) => {
       const prefix = labelTipus(t.tipus);
-      const details = t.lo_nev ? `${t.leiras} – ${t.lo_nev}` : t.leiras;
+      const horsePart = t.lo_nev ? ` – ${t.lo_nev}` : "";
       const whoPart = t.felhasznalo_nev ? ` (${t.felhasznalo_nev})` : "";
 
       return {
         id: `teendo-${t.teendo_id}`,
-        title: `${prefix}: ${details}${whoPart}`,
+        title: `${prefix}${horsePart}${whoPart}`,
         start: t.kezdeti_ido,
         end: t.hatarido,
         allDay: false,

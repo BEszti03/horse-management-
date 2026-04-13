@@ -28,6 +28,15 @@ function addDays(date, days) {
   return d;
 }
 
+function renderEventContent(eventInfo) {
+  return (
+    <div className="calendarEventContent">
+      {eventInfo.timeText && <div className="calendarEventTime">{eventInfo.timeText}</div>}
+      <div className="calendarEventTitle">{eventInfo.event.title}</div>
+    </div>
+  );
+}
+
 function Calendar() {
   const token = localStorage.getItem("token");
   const user = useMemo(() => {
@@ -169,6 +178,8 @@ function Calendar() {
       category: p.category,
       palya_id: p.palya_id,
       teendo_id: p.teendo_id,
+      lo_nev: p.lo_nev,
+      felhasznalo_nev: p.felhasznalo_nev,
     });
 
     setCompetitionHorseId("");
@@ -630,6 +641,7 @@ function Calendar() {
 
   const canCreateCompetition = user?.szerepkor === "lovarda_vezeto";
   const canSignupCompetition = user?.szerepkor === "lovas";
+  const calendarHeight = "calc(100vh - 160px)";
 
   return (
     <div>
@@ -648,18 +660,19 @@ function Calendar() {
             }}
             events={fetchEvents}
             nowIndicator
-            height="auto"
+            height={calendarHeight}
             selectable
             selectMirror
             select={openCreateModal}
-            slotDuration="00:05:00"
-            snapDuration="00:05:00"
+            slotDuration="01:00:00"
+            snapDuration="01:00:00"
             slotLabelInterval="01:00"
             editable
             eventResizableFromStart
             eventDrop={onEventChange}
             eventResize={onEventChange}
             eventClick={openEditModal}
+            eventContent={renderEventContent}
           />
         </div>
 

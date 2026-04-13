@@ -1,11 +1,18 @@
 /* Oldal layout */
 .calendarPage {
-  padding: 24px;
+  padding: 16px 20px 12px;
+  min-height: calc(100vh - 88px);
+  box-sizing: border-box;
 }
 
 .calendarTitle {
-  margin: 0 0 14px 0;
+  margin: 0 0 10px 0;
+  font-size: 26px;
   color: #3b2a1d;
+}
+
+.calendar {
+  max-width: 100%;
 }
 
 /* FullCalendar barnás téma – CSS változók (FullCalendar v5/v6) */
@@ -26,6 +33,73 @@
 
   --fc-neutral-text-color: #3b2a1d;
   --fc-border-color: rgba(59, 42, 29, 0.18);
+}
+
+.calendar .fc {
+  font-size: 13px;
+}
+
+.calendar .fc .fc-toolbar {
+  margin-bottom: 0.75rem;
+}
+
+.calendar .fc-toolbar.fc-header-toolbar {
+  gap: 8px;
+}
+
+.calendar .fc-toolbar-title {
+  font-size: 1.25rem;
+}
+
+.calendar .fc .fc-button {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.calendar .fc .fc-scrollgrid {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.calendar .fc .fc-timegrid-slot {
+  height: 1.85rem;
+}
+
+.calendar .fc .fc-timegrid-axis-cushion,
+.calendar .fc .fc-timegrid-slot-label-cushion,
+.calendar .fc .fc-col-header-cell-cushion,
+.calendar .fc .fc-daygrid-day-number {
+  padding: 0.2rem 0.35rem;
+}
+
+.calendar .fc .fc-event {
+  padding: 1px 2px;
+  font-size: 0.78rem;
+}
+
+.calendar .fc .fc-event-main,
+.calendar .fc .fc-event-main-frame,
+.calendar .fc .fc-event-title,
+.calendar .fc .fc-event-time {
+  white-space: normal;
+}
+
+.calendarEventContent {
+  display: grid;
+  gap: 1px;
+  line-height: 1.08;
+  overflow: hidden;
+}
+
+.calendarEventTime {
+  font-size: 0.72rem;
+  opacity: 0.92;
+}
+
+.calendarEventTitle {
+  font-size: 0.76rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .calendar .fc-toolbar-title {
@@ -61,6 +135,8 @@
 .calModal {
   width: 100%;
   max-width: 560px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
   background: #fffaf4;
   border-radius: 14px;
   padding: 16px;
@@ -123,6 +199,29 @@
   color: #3b2a1d;
 }
 
+.calDetailBox {
+  border: 1px solid rgba(59, 42, 29, 0.18);
+  border-radius: 12px;
+  background: rgba(122, 79, 42, 0.06);
+  padding: 10px 12px;
+}
+
+.calDetailLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  color: rgba(59, 42, 29, 0.7);
+  margin-bottom: 4px;
+}
+
+.calDetailValue {
+  color: #3b2a1d;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
 .calActions {
   display: flex;
   gap: 8px;
@@ -171,4 +270,63 @@
   opacity: 0.7;
   font-size: 12px;
   color: #3b2a1d;
+}
+
+@media (max-width: 920px) {
+  .calendarPage {
+    padding: 14px 14px 10px;
+  }
+
+  .calendarTitle {
+    font-size: 24px;
+  }
+
+  .calendar .fc {
+    font-size: 12px;
+  }
+
+  .calendar .fc-toolbar.fc-header-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .calendar .fc-toolbar-title {
+    font-size: 1.1rem;
+    text-align: center;
+  }
+
+  .calendar .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .calendarPage {
+    padding: 12px 10px 8px;
+  }
+
+  .calendarTitle {
+    margin-bottom: 8px;
+    font-size: 22px;
+  }
+
+  .calendar .fc .fc-toolbar {
+    gap: 6px;
+  }
+
+  .calendar .fc .fc-button {
+    padding: 0.28rem 0.45rem;
+    font-size: 0.78rem;
+  }
+
+  .calendar .fc .fc-timegrid-slot {
+    height: 1.6rem;
+  }
+
+  .calendar .fc .fc-col-header-cell-cushion,
+  .calendar .fc .fc-daygrid-day-number {
+    padding: 0.15rem 0.25rem;
+  }
 }
