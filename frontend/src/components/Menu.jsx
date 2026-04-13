@@ -14,6 +14,9 @@ function Menu() {
     user = null;
   }
 
+  const isAdmin = user?.szerepkor === "admin";
+  const isCompetitionManager = isAdmin || user?.szerepkor === "lovarda_vezeto";
+
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -43,45 +46,57 @@ function Menu() {
     };
   }, []);
 
+  function renderMenuItems(onItemClick) {
+    return (
+      <>
+        <Link className="menu__item" to="/profile" onClick={onItemClick}>
+          Felhasználó adatok
+        </Link>
+
+        <Link className="menu__item" to="/horses" onClick={onItemClick}>
+          Ló adatok
+        </Link>
+
+        <Link className="menu__item" to="/notes" onClick={onItemClick}>
+          Jegyzetek
+        </Link>
+
+        <Link className="menu__item" to="/calendar" onClick={onItemClick}>
+          Naptár
+        </Link>
+
+        {isCompetitionManager && (
+          <Link className="menu__item" to="/competitions" onClick={onItemClick}>
+            Versenyek
+          </Link>
+        )}
+
+        {isAdmin && (
+          <Link className="menu__item" to="/admin" onClick={onItemClick}>
+            Admin felület
+          </Link>
+        )}
+
+        <button type="button" className="menu__item menu__logout" onClick={handleLogout}>
+          Kijelentkezés
+        </button>
+      </>
+    );
+  }
+
   return (
     <div className="menu" ref={containerRef}>
+      <nav className="menu__inline" aria-label="Fő navigáció">
+        {renderMenuItems()}
+      </nav>
+
       <button className="menu__button" onClick={() => setOpen((v) => !v)}>
         Menü
       </button>
 
       {open && (
         <div className="menu__dropdown">
-          <Link className="menu__item" to="/profile" onClick={() => setOpen(false)}>
-            Felhasználó adatok
-          </Link>
-
-          <Link className="menu__item" to="/horses" onClick={() => setOpen(false)}>
-            Ló adatok
-          </Link>
-
-          <Link className="menu__item" to="/notes" onClick={() => setOpen(false)}>
-            Jegyzetek
-          </Link>
-
-          <Link className="menu__item" to="/calendar" onClick={() => setOpen(false)}>
-            Naptár
-          </Link>
-
-          {(user?.szerepkor === "admin" || user?.szerepkor === "lovarda_vezeto") && (
-          <Link className="menu__item" to="/competitions" onClick={() => setOpen(false)}>
-             Versenyek
-          </Link>
-          )}
-
-          {user?.szerepkor === "admin" && (
-            <Link className="menu__item" to="/admin" onClick={() => setOpen(false)}>
-              Admin felület
-            </Link>
-          )}
-
-          <button type="button" className="menu__item menu__logout" onClick={handleLogout}>
-            Kijelentkezés
-          </button>
+          {renderMenuItems(() => setOpen(false))}
         </div>
       )}
     </div>

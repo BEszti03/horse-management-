@@ -2,7 +2,35 @@
   position: relative;
 }
 
+.menu__inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.menu__inline .menu__item {
+  display: inline-block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #f6efe4;
+  text-decoration: none;
+}
+
+.menu__inline .menu__item:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.menu__inline .menu__logout {
+  width: auto;
+  background: transparent;
+  border: none;
+  color: #ffd6d6;
+  cursor: pointer;
+}
+
 .menu__button {
+  display: none;
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid #333;
@@ -11,6 +39,7 @@
 }
 
 .menu__dropdown {
+  display: none;
   position: absolute;
   top: 44px;
   right: 0;
@@ -46,4 +75,18 @@
 
 .menu__logout:hover {
   background: #fdecea;
+}
+
+@media (max-width: 768px) {
+  .menu__inline {
+    display: none;
+  }
+
+  .menu__button {
+    display: inline-block;
+  }
+
+  .menu__dropdown {
+    display: block;
+  }
 }
