@@ -13,7 +13,7 @@ A cél az alkalmazás fő képernyőinek, felhasználói folyamatai­nak és viz
 ### 1. Pageflow (képernyő-térkép)
 
 * [pageflow.png](./pageflow.png)
-* [pageflow.mmd](./pageflow.mmd)
+* [pageflow.drawio](./pageflow.drawio)
 
 Az alkalmazás összes képernyője és a köztük lévő navigáció.
 
