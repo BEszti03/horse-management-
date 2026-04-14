@@ -60,6 +60,57 @@ router.put("/users/:id/role", async (req, res) => {
   }
 });
 
+// felhasználó törlése
+router.delete("/users/:id", async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+
+    if (Number.isNaN(userId)) {
+      return res.status(400).json({ message: "Érvénytelen felhasználó azonosító." });
+    }
+
+    if (req.user.felhasznalo_id === userId) {
+      return res.status(400).json({ message: "A saját fiókodat nem törölheted innen." });
+    }
+
+    const existing = await pool.query(
+      `SELECT felhasznalo_id, nev, email, szerepkor
+       FROM felhasznalo
+       WHERE felhasznalo_id = $1`,
+      [userId]
+    );
+
+    if (!existing.rows.length) {
+      return res.status(404).json({ message: "Felhasználó nem található." });
+    }
+
+    const targetUser = existing.rows[0];
+
+    if (targetUser.szerepkor === "admin") {
+      const adminCountResult = await pool.query(
+        `SELECT COUNT(*)::int AS admin_count
+         FROM felhasznalo
+         WHERE szerepkor = 'admin'`
+      );
+
+      const adminCount = adminCountResult.rows[0]?.admin_count ?? 0;
+      if (adminCount <= 1) {
+        return res.status(400).json({ message: "Az utolsó admin felhasználó nem törölhető." });
+      }
+    }
+
+    await pool.query("DELETE FROM felhasznalo WHERE felhasznalo_id = $1", [userId]);
+
+    return res.json({
+      message: "Felhasználó törölve.",
+      deletedUser: targetUser,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Szerver hiba." });
+  }
+});
+
 // lovardák listázása
 router.get("/stables", async (_req, res) => {
   try {
@@ -133,6 +184,38 @@ router.get("/horses", async (_req, res) => {
   }
 });
 
+// ló törlése
+router.delete("/horses/:id", async (req, res) => {
+  try {
+    const horseId = Number(req.params.id);
+
+    if (Number.isNaN(horseId)) {
+      return res.status(400).json({ message: "Érvénytelen ló azonosító." });
+    }
+
+    const existing = await pool.query(
+      `SELECT lo_id, nev, felhasznalo_id
+       FROM lo
+       WHERE lo_id = $1`,
+      [horseId]
+    );
+
+    if (!existing.rows.length) {
+      return res.status(404).json({ message: "Ló nem található." });
+    }
+
+    await pool.query("DELETE FROM lo WHERE lo_id = $1", [horseId]);
+
+    return res.json({
+      message: "Ló törölve.",
+      deletedHorse: existing.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Szerver hiba." });
+  }
+});
+
 // versenyek listázása
 router.get("/competitions", async (_req, res) => {
   try {
@@ -152,6 +235,38 @@ router.get("/competitions", async (_req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Szerver hiba." });
+  }
+});
+
+// verseny törlése
+router.delete("/competitions/:id", async (req, res) => {
+  try {
+    const competitionId = Number(req.params.id);
+
+    if (Number.isNaN(competitionId)) {
+      return res.status(400).json({ message: "Érvénytelen verseny azonosító." });
+    }
+
+    const existing = await pool.query(
+      `SELECT verseny_id, nev, datum::text AS datum, lovarda_id
+       FROM verseny
+       WHERE verseny_id = $1`,
+      [competitionId]
+    );
+
+    if (!existing.rows.length) {
+      return res.status(404).json({ message: "Verseny nem található." });
+    }
+
+    await pool.query("DELETE FROM verseny WHERE verseny_id = $1", [competitionId]);
+
+    return res.json({
+      message: "Verseny törölve.",
+      deletedCompetition: existing.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Szerver hiba." });
   }
 });
 

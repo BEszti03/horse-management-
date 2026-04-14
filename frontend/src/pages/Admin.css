@@ -4,9 +4,9 @@
 }
 
 .adminMain {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 36px 20px 48px;
+  padding: 36px 12px 48px;
 }
 
 .adminHeader {
@@ -57,15 +57,110 @@
   backdrop-filter: blur(4px);
 }
 
+.adminLayout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.adminSidebar {
+  position: sticky;
+  top: 20px;
+  background: rgba(255, 252, 247, 0.92);
+  border: 1px solid rgba(120, 90, 68, 0.14);
+  border-radius: 22px;
+  padding: 14px;
+  box-shadow: 0 12px 28px rgba(75, 46, 31, 0.08);
+}
+
+.adminSidebarTitle {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4b2e1f;
+}
+
+.adminSidebarNav {
+  display: grid;
+  gap: 10px;
+}
+
+.adminSidebarItem {
+  width: 100%;
+  border: 1px solid #e4cdb3;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fffaf4;
+  color: #5e3d2a;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.adminSidebarItem:hover {
+  background: #f8ede0;
+  transform: translateX(2px);
+}
+
+.adminSidebarItem.is-active {
+  background: #7a2f2f;
+  border-color: #7a2f2f;
+  color: #fff;
+}
+
+.adminContent {
+  min-width: 0;
+}
+
 .adminSectionTitle {
   margin: 0 0 16px;
   font-size: 1.3rem;
   color: #4b2e1f;
 }
 
+.adminSectionHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.adminSectionHeaderRow .adminSectionTitle {
+  margin-bottom: 0;
+}
+
 .adminList {
   display: grid;
   gap: 14px;
+}
+
+.adminList--spacedTop {
+  margin-top: 2px;
+}
+
+.adminSearchWrap {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.adminSearchInput {
+  width: min(100%, 340px);
+  padding: 11px 14px;
+  border: 1px solid #d9c3ab;
+  border-radius: 12px;
+  background: #fff;
+  color: #4b2e1f;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.adminSearchInput:focus {
+  border-color: #8b5e3c;
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.14);
 }
 
 .adminRowCard {
@@ -90,6 +185,12 @@
 
 .adminRowBottom {
   margin-top: 14px;
+}
+
+.adminRowBottomActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .adminRowInline {
@@ -168,12 +269,21 @@
     padding: 24px 14px 36px;
   }
 
+  .adminLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .adminSidebar {
+    position: static;
+  }
+
   .adminTitle {
     font-size: 1.8rem;
   }
 
   .adminRowTop,
-  .adminRowInline {
+  .adminRowInline,
+  .adminRowBottomActions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -182,9 +292,26 @@
     align-self: flex-start;
   }
 
+  .adminSectionHeaderRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adminSectionHeaderRow .adminSearchWrap {
+    justify-content: stretch;
+  }
+
   .adminSelect,
   .adminDeleteButton {
     width: 100%;
     max-width: none;
+  }
+
+  .adminSearchWrap {
+    justify-content: stretch;
+  }
+
+  .adminSearchInput {
+    width: 100%;
   }
 }
