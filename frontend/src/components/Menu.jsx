@@ -67,7 +67,7 @@ function Menu() {
 
         {isCompetitionManager && (
           <Link className="menu__item" to="/competitions" onClick={onItemClick}>
-            Versenyek
+            Saját versenyek
           </Link>
         )}
 

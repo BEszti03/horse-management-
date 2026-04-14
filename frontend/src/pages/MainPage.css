@@ -2,34 +2,52 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 24px;
+  position: relative;
+  isolation: isolate;
 
   background-size: cover;
   background-position: top;
 }
 
+.mainpage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.16) 0%, rgba(0, 0, 0, 0.06) 40%, rgba(0, 0, 0, 0.38) 100%);
+}
+
 .mainpage__card {
   width: 100%;
-  max-width: 460px;
-  border: 3px solid #c4c9ce;
-  border-radius: 14px;
-  padding: 24px;
+  max-width: 490px;
+  border: 2px solid #c4c9ce;
+  border-radius: 18px;
+  padding: 26px;
   background: rgba(161, 145, 121, 0.85);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.26),
+    0 8px 20px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   margin-left: auto;
-  margin-right: 150px;
+  margin-right: clamp(10px, 8vw, 150px);
+  backdrop-filter: blur(4px);
 }
 
 .mainpage__title {
   text-align: center;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
+  font-size: clamp(38px, 4.3vw, 52px);
+  color: #2f2217;
+  letter-spacing: 0.3px;
 }
 
 .mainpage__subtitle {
   text-align: center;
   color: #ccc9c9;
   margin: 0 0 18px 0;
+  font-size: 14px;
 }
 
 .mainpage__info {
@@ -43,23 +61,89 @@
 
 .mainpage__tabs {
   display: flex;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(68, 58, 30, 0.12);
   margin-bottom: 16px;
 }
 
 .mainpage__tab {
   flex: 1;
-  padding: 10px;
-  border: 1px solid #443a1e;
-  background: #f9f9f9;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #443a1e;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.16s ease;
 }
 
 .mainpage__tab.active {
   background: #fff;
-  border-bottom: 2px solid #333;
-  font-weight: bold;
+  border-color: #443a1e;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
 }
 
 .mainpage__content {
   margin-top: 8px;
+}
+
+.mainpage .auth__title {
+  margin: 0 0 6px;
+  color: #2f2217;
+}
+
+.mainpage .auth__subtitle {
+  margin: 0 0 14px;
+  color: rgba(47, 34, 23, 0.7);
+}
+
+.mainpage .auth__label {
+  color: #3a2a1c;
+  font-weight: 600;
+}
+
+.mainpage .auth__input {
+  border: 1px solid rgba(68, 58, 30, 0.36);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.mainpage .auth__input:focus {
+  border-color: #443a1e;
+  box-shadow: 0 0 0 3px rgba(68, 58, 30, 0.12);
+}
+
+.mainpage .auth__button {
+  border: 1px solid #443a1e;
+  border-radius: 11px;
+  background: #fff;
+  font-weight: 700;
+}
+
+.mainpage .auth__button:hover {
+  background: #f3f1ed;
+}
+
+@media (max-width: 900px) {
+  .mainpage {
+    justify-content: center;
+  }
+
+  .mainpage__card {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .mainpage {
+    padding: 14px;
+  }
+
+  .mainpage__card {
+    padding: 18px;
+    border-radius: 14px;
+  }
 }

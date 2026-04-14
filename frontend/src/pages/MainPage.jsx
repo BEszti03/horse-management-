@@ -62,7 +62,7 @@ function MainPage() {
   return (
     <div className="mainpage" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <div className="mainpage__card">
-        <h1 className="mainpage__title">Horse Time Management</h1>
+        <h1 className="mainpage__title">Lóidő</h1>
         <p className="mainpage__subtitle">Lovas teendők és időbeosztás egyszerűen</p>
 
         {showAuthRequiredMsg && (
