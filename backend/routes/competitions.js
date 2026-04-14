@@ -39,6 +39,95 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 /* =========================
+   GET – saját rendezésű versenyek
+========================= */
+router.get("/managed", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.felhasznalo_id;
+
+    const result = await pool.query(
+      `
+      SELECT
+        v.verseny_id,
+        v.nev,
+        v.datum::text AS datum,
+        v.lovarda_id,
+        l.nev AS lovarda_nev
+      FROM verseny v
+      JOIN lovarda l ON l.lovarda_id = v.lovarda_id
+      WHERE v.letrehozo_felhasznalo_id = $1
+         OR (
+           v.letrehozo_felhasznalo_id IS NULL
+           AND v.lovarda_id = (
+             SELECT f.lovarda_id
+             FROM felhasznalo f
+             WHERE f.felhasznalo_id = $1
+           )
+         )
+      ORDER BY v.datum
+      `,
+      [userId]
+    );
+
+    return res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Hiba a saját versenyek lekérésekor" });
+  }
+});
+
+/* =========================
+   GET – saját versenyek jelentkezői
+========================= */
+router.get("/managed/entries", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.felhasznalo_id;
+
+    const result = await pool.query(
+      `
+      SELECT
+        v.verseny_id,
+        v.nev AS verseny_nev,
+        v.datum::text AS datum,
+        f.felhasznalo_id,
+        f.nev AS felhasznalo_nev,
+        f.email,
+        l.lo_id,
+        l.nev AS lo_nev,
+        lv.nev AS lovarda_nev
+      FROM verseny v
+      JOIN lovarda lv ON lv.lovarda_id = v.lovarda_id
+      JOIN verseny_felhasznalo vf ON vf.verseny_id = v.verseny_id
+      LEFT JOIN lo l
+        ON l.felhasznalo_id = vf.felhasznalo_id
+       AND l.lo_id IN (
+         SELECT vl.lo_id
+         FROM verseny_lo vl
+         WHERE vl.verseny_id = v.verseny_id
+       )
+      JOIN felhasznalo f ON f.felhasznalo_id = vf.felhasznalo_id
+      WHERE v.letrehozo_felhasznalo_id = $1
+         OR (
+           v.letrehozo_felhasznalo_id IS NULL
+           AND v.lovarda_id = (
+             SELECT fu.lovarda_id
+             FROM felhasznalo fu
+             WHERE fu.felhasznalo_id = $1
+           )
+         )
+      ORDER BY v.datum, v.nev, f.nev, l.nev
+      `,
+      [userId]
+    );
+
+    return res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Hiba a saját versenyek jelentkezőinek lekérésekor" });
+  }
+});
+
+/* =========================
    POST – verseny létrehozás
    (csak lovarda_vezeto)
 ========================= */
@@ -70,10 +159,10 @@ router.post("/", requireAuth, async (req, res) => {
 
     await pool.query(
       `
-      INSERT INTO verseny (nev, datum, lovarda_id)
-      VALUES ($1, $2, $3)
+      INSERT INTO verseny (nev, datum, lovarda_id, letrehozo_felhasznalo_id)
+      VALUES ($1, $2, $3, $4)
       `,
-      [nev, datum, lovardaId]
+      [nev, datum, lovardaId, userId]
     );
 
     return res.status(201).json({ message: "Verseny létrehozva" });
@@ -184,40 +273,52 @@ router.delete("/:id/signup", requireAuth, async (req, res) => {
 
 /* =========================
    DELETE – verseny törlése
-   (csak lovarda_vezeto + csak saját lovarda)
+   (admin: bármelyik, lovarda_vezeto: csak saját)
 ========================= */
 router.delete("/:id", requireAuth, async (req, res) => {
-  if (req.user.szerepkor !== "lovarda_vezeto") {
+  const role = req.user.szerepkor;
+
+  if (role !== "admin" && role !== "lovarda_vezeto") {
     return res.status(403).json({ error: "Nincs jogosultság" });
   }
 
   const versenyId = req.params.id;
 
   try {
-    const userId = req.user.felhasznalo_id;
+    if (role === "lovarda_vezeto") {
+      const userId = req.user.felhasznalo_id;
 
-    const userRes = await pool.query(
-      "SELECT lovarda_id FROM felhasznalo WHERE felhasznalo_id = $1",
-      [userId]
-    );
-    const lovardaId = userRes.rows[0]?.lovarda_id;
+      const userRes = await pool.query(
+        "SELECT lovarda_id FROM felhasznalo WHERE felhasznalo_id = $1",
+        [userId]
+      );
+      const lovardaId = userRes.rows[0]?.lovarda_id;
 
-    if (!lovardaId) {
-      return res.status(400).json({
-        error: "A felhasználó nincs lovardához rendelve",
-      });
-    }
+      if (!lovardaId) {
+        return res.status(400).json({
+          error: "A felhasználó nincs lovardához rendelve",
+        });
+      }
 
-    // Ellenőrizzük hogy a verseny tényleg a saját lovardájáé-e
-    const ownRes = await pool.query(
-      "SELECT verseny_id FROM verseny WHERE verseny_id = $1 AND lovarda_id = $2",
-      [versenyId, lovardaId]
-    );
+      // Lovarda vezető csak saját versenyt törölhet
+      const ownRes = await pool.query(
+        "SELECT verseny_id FROM verseny WHERE verseny_id = $1 AND lovarda_id = $2",
+        [versenyId, lovardaId]
+      );
 
-    if (ownRes.rowCount === 0) {
-      return res
-        .status(404)
-        .json({ error: "Nincs ilyen verseny, vagy nem a te lovardádé" });
+      if (ownRes.rowCount === 0) {
+        return res
+          .status(404)
+          .json({ error: "Nincs ilyen verseny, vagy nem a te lovardádé" });
+      }
+    } else {
+      const existsRes = await pool.query("SELECT verseny_id FROM verseny WHERE verseny_id = $1", [
+        versenyId,
+      ]);
+
+      if (existsRes.rowCount === 0) {
+        return res.status(404).json({ error: "Nincs ilyen verseny" });
+      }
     }
 
     // Kapcsolótáblák törlése
