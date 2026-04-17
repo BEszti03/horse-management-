@@ -12,7 +12,12 @@ function Header() {
 
   return (
     <header className="header">
-      <div className="logo" onClick={handleLogoClick}>
+      <div
+        className="logo"
+        onClick={handleLogoClick}
+        title="Lóidő Főoldal"
+        aria-label="Lóidő Főoldal"
+      >
         <img src={logo} alt="Horse-Time Management logo" />
       </div>
 
