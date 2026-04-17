@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route} from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import MainPage from "./pages/MainPage";
 import Home from "./pages/Home";
@@ -6,20 +7,40 @@ import Profile from "./pages/Profile";
 import Horses from "./pages/Horses";
 import Calendar from "./pages/Calendar";
 import Competitions from "./pages/Competitions";
-import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Notes from "./pages/Notes";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Admin from "./pages/Admin";
 import AdminRoute from "./components/AdminRoute";
 
+const pageTitles = {
+  "/": "Lóidő | Belépés",
+  "/register": "Lóidő | Regisztráció",
+  "/home": "Lóidő | Főoldal",
+  "/profile": "Lóidő | Profil",
+  "/horses": "Lóidő | Lovak",
+  "/notes": "Lóidő | Jegyzetek",
+  "/calendar": "Lóidő | Naptár",
+  "/competitions": "Lóidő | Versenyek",
+  "/admin": "Lóidő | Admin",
+};
+
+function RouteTitleManager() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.title = pageTitles[pathname] || "Lóidő";
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
+      <RouteTitleManager />
       <Routes>
         <Route path="/" element={<MainPage />} />
-
-        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         <Route

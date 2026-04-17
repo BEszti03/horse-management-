@@ -66,7 +66,7 @@ function Register({ embedded = false, onSwitchTab }) {
         // Login tab + success üzenet a Login komponensnek
         onSwitchTab?.("login", "Sikeres regisztráció!");
       } else {
-        navigate("/login", { state: { successMsg: "Sikeres regisztráció!" } });
+        navigate("/", { state: { successMsg: "Sikeres regisztráció!" } });
       }
     } catch (err) {
       setServerMsg("Nem érem el a backendet. Fut a backend a 5000-es porton?");

@@ -35,12 +35,19 @@ function MainPage() {
   // - állítsuk be a helyi üzenetet
   // - majd "fogyasszuk el" a router state-et (replace), hogy refresh után ne maradjon meg
   useEffect(() => {
-    if (location.state?.authRequired) {
+    if (location.state?.authRequired || location.state?.successMsg) {
       setActiveTab("login");
-      setShowAuthRequiredMsg(true);
+      setShowAuthRequiredMsg(Boolean(location.state?.authRequired));
+      if (location.state?.successMsg) {
+        setEmbeddedSuccessMsg(location.state.successMsg);
+      }
       navigate(location.pathname, { replace: true, state: null });
     }
   }, [location.state, location.pathname, navigate]);
+
+  useEffect(() => {
+    document.title = activeTab === "register" ? "Lóidő | Regisztráció" : "Lóidő | Belépés";
+  }, [activeTab]);
 
   const clearEmbeddedSuccessMsg = useCallback(() => {
     setEmbeddedSuccessMsg("");

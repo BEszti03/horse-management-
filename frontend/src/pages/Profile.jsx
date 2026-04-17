@@ -24,7 +24,7 @@ function Profile() {
 
   useEffect(() => {
     if (!token) {
-      navigate("/login", { replace: true });
+      navigate("/", { replace: true });
       return;
     }
 

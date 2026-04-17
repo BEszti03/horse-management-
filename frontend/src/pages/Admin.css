@@ -141,6 +141,43 @@
   margin-top: 2px;
 }
 
+.adminPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.adminPaginationButton {
+  border: 1px solid #d9c3ab;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #fffaf4;
+  color: #5e3d2a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.adminPaginationButton:hover:not(:disabled) {
+  background: #f8ede0;
+  border-color: #8b5e3c;
+  transform: translateY(-1px);
+}
+
+.adminPaginationButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.adminPaginationInfo {
+  min-width: 72px;
+  text-align: center;
+  font-weight: 700;
+  color: #7a5a44;
+}
+
 .adminSearchWrap {
   display: flex;
   justify-content: flex-end;
@@ -200,11 +237,29 @@
   gap: 12px;
 }
 
+.adminUserActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
 .adminPrimaryText {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
   color: #3f281c;
+}
+
+.adminNameWithBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.adminNameWithBadge .adminSecondaryText {
+  width: 100%;
 }
 
 .adminSecondaryText {
@@ -264,6 +319,182 @@
   transform: translateY(0);
 }
 
+.adminEditButton {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #5e7a7a;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.adminEditButton:hover {
+  background: #4a6161;
+  transform: translateY(-1px);
+}
+
+.adminEditButton:active {
+  transform: translateY(0);
+}
+
+.adminModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.adminModal {
+  background: rgba(255, 252, 247, 0.98);
+  border: 1px solid rgba(120, 90, 68, 0.14);
+  border-radius: 22px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.adminModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eadbc7;
+}
+
+.adminModalTitle {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #4b2e1f;
+}
+
+.adminModalClose {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #7a5a44;
+  cursor: pointer;
+  transition: color 0.18s ease;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adminModalClose:hover {
+  color: #4b2e1f;
+}
+
+.adminModalBody {
+  padding: 24px;
+}
+
+.adminFormGroup {
+  margin-bottom: 18px;
+}
+
+.adminFormGroup:last-child {
+  margin-bottom: 0;
+}
+
+.adminFormLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: #4b2e1f;
+  font-size: 0.95rem;
+}
+
+.adminFormInput {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d9c3ab;
+  border-radius: 12px;
+  background: #fff;
+  color: #4b2e1f;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-sizing: border-box;
+}
+
+.adminFormInput:focus {
+  border-color: #8b5e3c;
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.14);
+}
+
+.adminModalFooter {
+  padding: 16px 24px;
+  border-top: 1px solid #eadbc7;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.adminButtonCancel {
+  border: 1px solid #d9c3ab;
+  border-radius: 12px;
+  padding: 11px 18px;
+  background: #fffaf4;
+  color: #5e3d2a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.adminButtonCancel:hover {
+  background: #f8ede0;
+  border-color: #8b5e3c;
+}
+
+.adminButtonSave {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 18px;
+  background: #7a2f2f;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.adminButtonSave:hover {
+  background: #612424;
+}
+
 @media (max-width: 768px) {
   .adminMain {
     padding: 24px 14px 36px;
@@ -283,7 +514,8 @@
 
   .adminRowTop,
   .adminRowInline,
-  .adminRowBottomActions {
+  .adminRowBottomActions,
+  .adminUserActions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -302,7 +534,8 @@
   }
 
   .adminSelect,
-  .adminDeleteButton {
+  .adminDeleteButton,
+  .adminEditButton {
     width: 100%;
     max-width: none;
   }
@@ -312,6 +545,34 @@
   }
 
   .adminSearchInput {
+    width: 100%;
+  }
+
+  .adminPagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adminPaginationInfo {
+    order: -1;
+  }
+
+  .adminPaginationButton {
+    width: 100%;
+  }
+
+  .adminModal {
+    width: 95%;
+    max-width: 95%;
+  }
+
+  .adminModalFooter {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .adminButtonCancel,
+  .adminButtonSave {
     width: 100%;
   }
 }
