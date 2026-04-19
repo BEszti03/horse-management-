@@ -98,6 +98,8 @@
 
 .fieldInput {
   width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
   border-radius: 14px;
   border: 1px solid rgba(137, 95, 51, 0.28);
   background: rgba(255, 255, 255, 0.86);
@@ -216,6 +218,15 @@
   flex-wrap: wrap;
 }
 
+.horseThumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(137, 95, 51, 0.25);
+  background: rgba(255, 255, 255, 0.7);
+}
+
 .horseText {
   display: grid;
   gap: 4px;
@@ -257,10 +268,31 @@
   gap: 12px;
 }
 
+.horseImageSection {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.horseAvatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(137, 95, 51, 0.25);
+  background: rgba(255, 255, 255, 0.7);
+}
+
 .editGrid {
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr 1fr 1fr;
+  align-items: start;
+}
+
+.editGrid > .field {
+  min-width: 0;
 }
 
 @media (max-width: 860px) {
@@ -272,5 +304,15 @@
 @media (max-width: 560px) {
   .horsesMain {
     padding: 16px;
+  }
+
+  .horseThumb {
+    width: 52px;
+    height: 52px;
+  }
+
+  .horseAvatar {
+    width: 78px;
+    height: 78px;
   }
 }

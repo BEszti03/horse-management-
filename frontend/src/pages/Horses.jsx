@@ -5,6 +5,7 @@ import "./Horses.css";
 
 function Horses() {
   const [horses, setHorses] = useState([]);
+  const token = localStorage.getItem("token");
 
   const [nev, setNev] = useState("");
   const [fajta, setFajta] = useState("");
@@ -14,9 +15,15 @@ function Horses() {
   const [editNev, setEditNev] = useState("");
   const [editFajta, setEditFajta] = useState("");
   const [editSzuletesiIdo, setEditSzuletesiIdo] = useState("");
+  const [uploadingImageId, setUploadingImageId] = useState(null);
+  const [deletingImageId, setDeletingImageId] = useState(null);
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  function hasUploadedHorseImage(kepUrl) {
+    return Boolean(kepUrl && String(kepUrl).startsWith("/uploads/horses/"));
+  }
 
   const fetchHorses = useCallback(async () => {
     setError("");
@@ -113,6 +120,83 @@ function Horses() {
     }
   }
 
+  async function handleHorseImageUpload(loId, e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setError("");
+      setMessage("");
+      setUploadingImageId(loId);
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch(`http://localhost:5000/api/horses/${loId}/image`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Sikertelen kép feltöltés.");
+      }
+
+      if (data?.lo) {
+        setHorses((prev) => prev.map((h) => (h.lo_id === loId ? data.lo : h)));
+      } else {
+        fetchHorses();
+      }
+
+      setMessage("Lókép sikeresen feltöltve.");
+    } catch (err) {
+      setError(err?.message || "Nem sikerült feltölteni a képet.");
+    } finally {
+      setUploadingImageId(null);
+      e.target.value = "";
+    }
+  }
+
+  async function handleHorseImageDelete(loId) {
+    const ok = window.confirm("Biztosan törlöd a képet?");
+    if (!ok) return;
+
+    try {
+      setError("");
+      setMessage("");
+      setDeletingImageId(loId);
+
+      const response = await fetch(`http://localhost:5000/api/horses/${loId}/image`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Sikertelen kép törlés.");
+      }
+
+      if (data?.lo) {
+        setHorses((prev) => prev.map((h) => (h.lo_id === loId ? data.lo : h)));
+      } else {
+        fetchHorses();
+      }
+
+      setMessage(data.message || "Kép törölve.");
+    } catch (err) {
+      setError(err?.message || "Nem sikerült törölni a képet.");
+    } finally {
+      setDeletingImageId(null);
+    }
+  }
+
   return (
     <div className="horsesPage">
       <Header />
@@ -185,80 +269,116 @@ function Horses() {
             <p className="horsesEmpty">Még nincs felvett ló.</p>
           ) : (
             <ul className="horsesList">
-              {horses.map((lo) => (
-                <li key={lo.lo_id} className="horseItem">
-                  {editingId === lo.lo_id ? (
-                    <div className="editBox">
-                      <div className="editGrid">
-                        <label className="field">
-                          <span className="fieldLabel">Név</span>
-                          <input
-                            className="fieldInput"
-                            type="text"
-                            value={editNev}
-                            onChange={(e) => setEditNev(e.target.value)}
-                            required
-                          />
-                        </label>
+              {horses.map((lo) => {
+                const uploadedImage = hasUploadedHorseImage(lo.kep_url);
+                const horseImageSrc = uploadedImage
+                  ? `http://localhost:5000${lo.kep_url}`
+                  : "/default-horse.png";
 
-                        <label className="field">
-                          <span className="fieldLabel">Fajta</span>
-                          <input
-                            className="fieldInput"
-                            type="text"
-                            value={editFajta}
-                            onChange={(e) => setEditFajta(e.target.value)}
-                          />
-                        </label>
+                return (
+                  <li key={lo.lo_id} className="horseItem">
+                    {editingId === lo.lo_id ? (
+                      <div className="editBox">
+                        <div className="horseImageSection">
+                          <img className="horseAvatar" src={horseImageSrc} alt={`${lo.nev} képe`} />
 
-                        <label className="field">
-                          <span className="fieldLabel">Születési dátum</span>
+                          <label className="btn btnSoft" htmlFor={`horse-image-${lo.lo_id}`}>
+                            {uploadingImageId === lo.lo_id ? "Feltöltés..." : "Kép feltöltése"}
+                          </label>
                           <input
-                            className="fieldInput"
-                            type="date"
-                            value={editSzuletesiIdo}
-                            onChange={(e) => setEditSzuletesiIdo(e.target.value)}
+                            id={`horse-image-${lo.lo_id}`}
+                            type="file"
+                            accept="image/*"
+                            hidden
+                            disabled={uploadingImageId === lo.lo_id}
+                            onChange={(e) => handleHorseImageUpload(lo.lo_id, e)}
                           />
-                        </label>
-                      </div>
 
-                      <div className="horsesActions horsesActionsSplit">
-                        <button className="btn btnPrimary" type="button" onClick={() => handleUpdate(lo.lo_id)}>
-                          Mentés
-                        </button>
-                        <button className="btn btnGhost" type="button" onClick={cancelEdit}>
-                          Mégse
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="horseRow">
-                      <div className="horseText">
-                        <div className="horseName">
-                          {lo.nev}
-                          {lo.fajta ? <span className="horseMeta"> – {lo.fajta}</span> : null}
+                          {uploadedImage ? (
+                            <button
+                              className="btn btnGhost"
+                              type="button"
+                              onClick={() => handleHorseImageDelete(lo.lo_id)}
+                              disabled={deletingImageId === lo.lo_id || uploadingImageId === lo.lo_id}
+                            >
+                              {deletingImageId === lo.lo_id ? "Törlés..." : "Kép törlése"}
+                            </button>
+                          ) : null}
                         </div>
-                        <div className="horseSub">
-                          {lo.szuletesi_ido ? (
-                            <span className="horseDate">{lo.szuletesi_ido.slice(0, 10)}</span>
-                          ) : (
-                            <span className="horseMuted">Nincs megadva születési dátum</span>
-                          )}
+
+                        <div className="editGrid">
+                          <label className="field">
+                            <span className="fieldLabel">Név</span>
+                            <input
+                              className="fieldInput"
+                              type="text"
+                              value={editNev}
+                              onChange={(e) => setEditNev(e.target.value)}
+                              required
+                            />
+                          </label>
+
+                          <label className="field">
+                            <span className="fieldLabel">Fajta</span>
+                            <input
+                              className="fieldInput"
+                              type="text"
+                              value={editFajta}
+                              onChange={(e) => setEditFajta(e.target.value)}
+                            />
+                          </label>
+
+                          <label className="field">
+                            <span className="fieldLabel">Születési dátum</span>
+                            <input
+                              className="fieldInput"
+                              type="date"
+                              value={editSzuletesiIdo}
+                              onChange={(e) => setEditSzuletesiIdo(e.target.value)}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="horsesActions horsesActionsSplit">
+                          <button className="btn btnPrimary" type="button" onClick={() => handleUpdate(lo.lo_id)}>
+                            Mentés
+                          </button>
+                          <button className="btn btnGhost" type="button" onClick={cancelEdit}>
+                            Mégse
+                          </button>
                         </div>
                       </div>
+                    ) : (
+                      <div className="horseRow">
+                        <img className="horseThumb" src={horseImageSrc} alt={`${lo.nev} bélyegkép`} />
 
-                      <div className="horseButtons">
-                        <button className="btn btnSoft" type="button" onClick={() => startEdit(lo)}>
-                          Szerkesztés
-                        </button>
-                        <button className="btn btnDanger" type="button" onClick={() => handleDelete(lo.lo_id)}>
-                          Törlés
-                        </button>
+                        <div className="horseText">
+                          <div className="horseName">
+                            {lo.nev}
+                            {lo.fajta ? <span className="horseMeta"> - {lo.fajta}</span> : null}
+                          </div>
+                          <div className="horseSub">
+                            {lo.szuletesi_ido ? (
+                              <span className="horseDate">{lo.szuletesi_ido.slice(0, 10)}</span>
+                            ) : (
+                              <span className="horseMuted">Nincs megadva születési dátum</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="horseButtons">
+                          <button className="btn btnSoft" type="button" onClick={() => startEdit(lo)}>
+                            Szerkesztés
+                          </button>
+                          <button className="btn btnDanger" type="button" onClick={() => handleDelete(lo.lo_id)}>
+                            Törlés
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </li>
-              ))}
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>

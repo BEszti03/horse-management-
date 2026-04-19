@@ -1,6 +1,9 @@
 const express = require("express");
 const requireAuth = require("../middleware/requireAuth");
 const pool = require("../config/db");
+const upload = require("../middleware/upload");
+const fs = require("fs/promises");
+const path = require("path");
 
 const router = express.Router();
 
@@ -11,9 +14,12 @@ router.get("/", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT 
-         lo_id, nev, fajta,
+         lo_id,
+         nev,
+         fajta,
          szuletesi_ido::text AS szuletesi_ido,
-         felhasznalo_id
+         felhasznalo_id,
+         kep_url
        FROM lo
        WHERE felhasznalo_id = $1
        ORDER BY lo_id DESC`,
@@ -41,9 +47,12 @@ router.post("/", requireAuth, async (req, res) => {
       `INSERT INTO lo (nev, fajta, szuletesi_ido, felhasznalo_id)
        VALUES ($1, $2, $3::date, $4)
        RETURNING 
-         lo_id, nev, fajta,
+         lo_id,
+         nev,
+         fajta,
          szuletesi_ido::text AS szuletesi_ido,
-         felhasznalo_id`,
+         felhasznalo_id,
+         kep_url`,
       [nev, fajta || null, szuletesi_ido || null, felhasznaloId]
     );
 
@@ -63,6 +72,10 @@ router.put("/:id", requireAuth, async (req, res) => {
   const felhasznaloId = req.user.felhasznalo_id;
   const { nev, fajta, szuletesi_ido } = req.body;
 
+  if (!Number.isInteger(loId) || loId <= 0) {
+    return res.status(400).json({ message: "Érvénytelen ló azonosító." });
+  }
+
   if (!nev) {
     return res.status(400).json({ message: "A ló neve kötelező." });
   }
@@ -75,9 +88,12 @@ router.put("/:id", requireAuth, async (req, res) => {
            szuletesi_ido = $3::date
        WHERE lo_id = $4 AND felhasznalo_id = $5
        RETURNING
-         lo_id, nev, fajta,
+         lo_id,
+         nev,
+         fajta,
          szuletesi_ido::text AS szuletesi_ido,
-         felhasznalo_id`,
+         felhasznalo_id,
+         kep_url`,
       [nev, fajta || null, szuletesi_ido || null, loId, felhasznaloId]
     );
 
@@ -94,10 +110,135 @@ router.put("/:id", requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/horses/:id/image - lókép feltöltés
+router.post("/:id/image", requireAuth, upload.single("image"), async (req, res) => {
+  const loId = Number(req.params.id);
+  const felhasznaloId = req.user.felhasznalo_id;
+
+  if (!Number.isInteger(loId) || loId <= 0) {
+    return res.status(400).json({ message: "Érvénytelen ló azonosító." });
+  }
+
+  try {
+    const horseCheck = await pool.query(
+      `SELECT lo_id
+       FROM lo
+       WHERE lo_id = $1 AND felhasznalo_id = $2`,
+      [loId, felhasznaloId]
+    );
+
+    if (horseCheck.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Nincs ilyen ló, vagy nincs jogosultságod." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Nem érkezett kép." });
+    }
+
+    const imagePath = `/uploads/horses/${req.file.filename}`;
+
+    const result = await pool.query(
+      `UPDATE lo
+       SET kep_url = $1
+       WHERE lo_id = $2 AND felhasznalo_id = $3
+       RETURNING
+         lo_id,
+         nev,
+         fajta,
+         szuletesi_ido::text AS szuletesi_ido,
+         felhasznalo_id,
+         kep_url`,
+      [imagePath, loId, felhasznaloId]
+    );
+
+    res.json({
+      message: "Lókép feltöltve.",
+      lo: result.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Hiba történt a lókép feltöltésekor.",
+      error: err.message,
+    });
+  }
+});
+
+// DELETE /api/horses/:id/image - lókép törlés
+router.delete("/:id/image", requireAuth, async (req, res) => {
+  const loId = Number(req.params.id);
+  const felhasznaloId = req.user.felhasznalo_id;
+
+  if (!Number.isInteger(loId) || loId <= 0) {
+    return res.status(400).json({ message: "Érvénytelen ló azonosító." });
+  }
+
+  try {
+    const horseQ = await pool.query(
+      `SELECT lo_id, kep_url
+       FROM lo
+       WHERE lo_id = $1 AND felhasznalo_id = $2`,
+      [loId, felhasznaloId]
+    );
+
+    if (!horseQ.rows.length) {
+      return res
+        .status(404)
+        .json({ message: "Nincs ilyen ló, vagy nincs jogosultságod." });
+    }
+
+    const currentImageUrl = horseQ.rows[0].kep_url;
+
+    const result = await pool.query(
+      `UPDATE lo
+       SET kep_url = NULL
+       WHERE lo_id = $1 AND felhasznalo_id = $2
+       RETURNING
+         lo_id,
+         nev,
+         fajta,
+         szuletesi_ido::text AS szuletesi_ido,
+         felhasznalo_id,
+         kep_url`,
+      [loId, felhasznaloId]
+    );
+
+    if (currentImageUrl && String(currentImageUrl).startsWith("/uploads/horses/")) {
+      const fileName = path.basename(currentImageUrl);
+      const filePath = path.join(__dirname, "..", "uploads", "horses", fileName);
+
+      try {
+        await fs.unlink(filePath);
+      } catch (fileErr) {
+        if (fileErr.code !== "ENOENT") {
+          console.warn("Lókép fájl törlés sikertelen:", fileErr.message);
+        }
+      }
+    }
+
+    return res.json({
+      message: "Lókép törölve.",
+      lo: result.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Hiba történt a lókép törlésekor.",
+      error: err.message,
+    });
+  }
+});
+
 // DELETE /api/horses/:id - törlés
 router.delete("/:id", requireAuth, async (req, res) => {
   const loId = Number(req.params.id);
   const felhasznaloId = req.user.felhasznalo_id;
+
+  if (!Number.isInteger(loId) || loId <= 0) {
+    return res.status(400).json({ message: "Érvénytelen ló azonosító." });
+  }
 
   try {
     const result = await pool.query(
