@@ -15,11 +15,11 @@ function Profile() {
   const [nev, setNev] = useState("");
   const [email, setEmail] = useState("");
   const [lovardaId, setLovardaId] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showAddStableModal, setShowAddStableModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-
-  const [showAddStable, setShowAddStable] = useState(false);
   const [newStableName, setNewStableName] = useState("");
 
   const [loading, setLoading] = useState(true);
@@ -66,7 +66,22 @@ function Profile() {
       setError("");
       setSuccess("");
 
-      const wantsPasswordChange = Boolean(newPassword);
+      const hasCurrentPassword = Boolean(currentPassword.trim());
+      const hasNewPassword = Boolean(newPassword.trim());
+      const hasNewPasswordConfirm = Boolean(newPasswordConfirm.trim());
+
+      if (showPasswordModal && !hasCurrentPassword && !hasNewPassword && !hasNewPasswordConfirm) {
+        setError("A jelszó módosításához töltsd ki a mezőket.");
+        return;
+      }
+
+      const somePasswordFieldFilled = hasCurrentPassword || hasNewPassword || hasNewPasswordConfirm;
+      if (somePasswordFieldFilled && (!hasCurrentPassword || !hasNewPassword || !hasNewPasswordConfirm)) {
+        setError("A jelszó módosításához mindhárom jelszó mező kitöltése kötelező.");
+        return;
+      }
+
+      const wantsPasswordChange = hasNewPassword;
       if (wantsPasswordChange && newPassword !== newPasswordConfirm) {
         setError("Az új jelszó és a megerősítés nem egyezik.");
         return;
@@ -87,9 +102,12 @@ function Profile() {
       setNev(data.user?.nev || "");
       setEmail(data.user?.email || "");
       setLovardaId(data.user?.lovarda_id ?? "");
+      setShowPasswordModal(false);
+      setShowAddStableModal(false);
       setCurrentPassword("");
       setNewPassword("");
       setNewPasswordConfirm("");
+      setNewStableName("");
       setSuccess("Sikeres mentés!");
       setEditMode(false);
 
@@ -129,7 +147,7 @@ function Profile() {
       });
 
       setNewStableName("");
-      setShowAddStable(false);
+      setShowAddStableModal(false);
       setSuccess("Lovarda hozzáadva.");
 
       const listData = await apiFetch("/api/stables", {
@@ -166,6 +184,28 @@ function Profile() {
       }
     } catch (err) {
       setError(err.message || "Lovarda felvitel hiba.");
+    }
+  }
+
+  async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      "Biztosan törlöd a fiókodat? Ez a művelet nem vonható vissza."
+    );
+    if (!confirmed) return;
+
+    try {
+      setError("");
+      setSuccess("");
+
+      await apiFetch("/api/users/me", {
+        method: "DELETE",
+      });
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.message || "Fiók törlés hiba.");
     }
   }
 
@@ -298,226 +338,293 @@ function Profile() {
         {loading && <p className="profileLoading">Betöltés...</p>}
 
         {success && <div className="profileAlert profileAlertSuccess">{success}</div>}
-        {error && <div className="profileAlert profileAlertError">{error}</div>}
 
         {!loading && user && (
-          <section className="profileCard">
-            <div className="profileImageSection">
-              <img
-                className="profileAvatar"
-                src={
-                  user.profilkep_url
-                    ? `http://localhost:5000${user.profilkep_url}`
-                    : "/default-avatar.png"
-                }
-                alt="Profilkép"
-              />
+          <div className="profileLayout">
+            {/* Bal oldali sidebar - gombok */}
+            <aside className="profileSidebar">
+              <h3 className="profileSidebarTitle">Műveletek</h3>
+              <div className="profileSidebarNav">
+                <button
+                  className="profileSidebarItem"
+                  onClick={() => {
+                    setEditMode(true);
+                    setShowPasswordModal(false);
+                    setShowAddStableModal(false);
+                  }}
+                  disabled={editMode}
+                >
+                  Profil szerkesztése
+                </button>
 
-              {editMode ? (
-                <>
-                  <label className="btn btnSoft profileUploadButton">
-                    {uploadingImage ? "Feltöltés..." : "Profilkép feltöltése"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfileImageUpload}
-                      hidden
-                    />
-                  </label>
+                <button
+                  className="profileSidebarItem"
+                  onClick={() => setShowAddStableModal(true)}
+                  type="button"
+                >
+                  Új lovarda felvitele
+                </button>
 
-                  {user.profilkep_url ? (
-                    <button
-                      className="btn btnGhost"
-                      type="button"
-                      onClick={handleProfileImageDelete}
-                      disabled={deletingImage || uploadingImage}
-                    >
-                      {deletingImage ? "Törlés..." : "Profilkép törlése"}
-                    </button>
-                  ) : null}
-                </>
-              ) : (
-                <span className="fieldHint">Profilkép módosításához kattints a Profil szerkesztése gombra.</span>
-              )}
-            </div>
+                <button
+                  className="profileSidebarItem"
+                  onClick={() => setShowPasswordModal(true)}
+                  type="button"
+                >
+                  Jelszó módosítása
+                </button>
 
-            {!editMode ? (
-              <>
-                <div className="profileInfoGrid">
-                  <div className="profileInfoRow">
-                    <span className="profileLabel">Név</span>
-                    <span className="profileValue">{user.nev}</span>
-                  </div>
+                <button
+                  className="profileSidebarItem profileSidebarItemDanger"
+                  onClick={handleDeleteAccount}
+                  type="button"
+                >
+                  Fiók törlése
+                </button>
+              </div>
+            </aside>
 
-                  <div className="profileInfoRow">
-                    <span className="profileLabel">Email</span>
-                    <span className="profileValue">{user.email}</span>
-                  </div>
+            {/* Jobb oldali tartalom */}
+            <section className="profileContent">
+              <section className="profileCard">
+                <div className="profileImageSection">
+                  <img
+                    className="profileAvatar"
+                    src={
+                      user.profilkep_url
+                        ? `http://localhost:5000${user.profilkep_url}`
+                        : "/default-avatar.png"
+                    }
+                    alt="Profilkép"
+                  />
 
-                  <div className="profileInfoRow">
-                    <span className="profileLabel">Szerepkör</span>
-                    <span className="profileValue">{roleLabel(user.szerepkor)}</span>
-                  </div>
-
-                  <div className="profileInfoRow">
-                    <span className="profileLabel">Lovarda</span>
-                    <span className="profileValue">
-                      {user.lovarda_nev || <span className="profileMuted">Nincs beállítva</span>}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="profileActions">
-                  <button className="btn btnPrimary" onClick={() => setEditMode(true)}>
-                    Profil szerkesztése
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="profileForm">
-                  <label className="field">
-                    <span className="fieldLabel">Név</span>
-                    <input
-                      className="fieldInput"
-                      value={nev}
-                      onChange={(e) => setNev(e.target.value)}
-                      placeholder="Add meg a neved"
-                      autoComplete="name"
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span className="fieldLabel">Email</span>
-                    <input
-                      className="fieldInput"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Add meg az emailed"
-                      autoComplete="email"
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span className="fieldLabel">Lovarda</span>
-                    <select
-                      className="fieldSelect"
-                      value={lovardaId}
-                      onChange={(e) => setLovardaId(e.target.value)}
-                    >
-                      <option value="">— nincs —</option>
-                      {stables.map((s) => (
-                        <option key={s.stable_id} value={s.stable_id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="fieldHint">
-                      Tipp: ha a lovardád nincs a listában, fel tudod venni.
-                    </span>
-                  </label>
-
-                  <div className="profileDivider" />
-
-                  <div className="profileInlineRow">
-                    <strong>Jelszó módosítása</strong>
-                  </div>
-
-                  <label className="field">
-                    <span className="fieldLabel">Jelenlegi jelszó</span>
-                    <input
-                      className="fieldInput"
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Csak jelszóváltás esetén kötelező"
-                      autoComplete="current-password"
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span className="fieldLabel">Új jelszó</span>
-                    <input
-                      className="fieldInput"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Minimum 6 karakter"
-                      autoComplete="new-password"
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span className="fieldLabel">Új jelszó megerősítése</span>
-                    <input
-                      className="fieldInput"
-                      type="password"
-                      value={newPasswordConfirm}
-                      onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                      placeholder="Írd be újra az új jelszót"
-                      autoComplete="new-password"
-                    />
-                  </label>
-
-                  <div className="profileDivider" />
-
-                  <div className="profileInlineRow">
-                    <button
-                      className="btn btnSoft"
-                      onClick={() => setShowAddStable(!showAddStable)}
-                      type="button"
-                    >
-                      Új lovarda felvitele
-                    </button>
-                  </div>
-
-                  {showAddStable && (
-                    <div className="addStableBox">
-                      <div className="addStableRow">
+                  {editMode ? (
+                    <>
+                      <label className="btn btnSoft profileUploadButton">
+                        {uploadingImage ? "Feltöltés..." : "Profilkép feltöltése"}
                         <input
-                          className="fieldInput"
-                          placeholder="Lovarda neve"
-                          value={newStableName}
-                          onChange={(e) => setNewStableName(e.target.value)}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfileImageUpload}
+                          hidden
                         />
-                        <button className="btn btnPrimary" onClick={handleAddStable} type="button">
-                          Hozzáadás
+                      </label>
+
+                      {user.profilkep_url ? (
+                        <button
+                          className="btn btnGhost"
+                          type="button"
+                          onClick={handleProfileImageDelete}
+                          disabled={deletingImage || uploadingImage}
+                        >
+                          {deletingImage ? "Törlés..." : "Profilkép törlése"}
                         </button>
-                      </div>
-                    </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <span className="fieldHint">Profilkép módosításához kattints a Profil szerkesztése gombra.</span>
                   )}
                 </div>
 
-                <div className="profileActions profileActionsSplit">
-                  <button className="btn btnPrimary" onClick={handleSave} type="button">
-                    Mentés
-                  </button>
+                {!editMode ? (
+                  <>
+                    <div className="profileInfoGrid">
+                      <div className="profileInfoRow">
+                        <span className="profileLabel">Név</span>
+                        <span className="profileValue">{user.nev}</span>
+                      </div>
 
-                  <button
-                    className="btn btnGhost"
-                    onClick={() => {
-                      setEditMode(false);
-                      setNev(user.nev || "");
-                      setEmail(user.email || "");
-                      setLovardaId(user.lovarda_id ?? "");
-                      setCurrentPassword("");
-                      setNewPassword("");
-                      setNewPasswordConfirm("");
-                      setShowAddStable(false);
-                      setNewStableName("");
-                      setError("");
-                      setSuccess("");
-                    }}
-                    type="button"
-                  >
-                    Mégse
-                  </button>
-                </div>
-              </>
-            )}
-          </section>
+                      <div className="profileInfoRow">
+                        <span className="profileLabel">Email</span>
+                        <span className="profileValue">{user.email}</span>
+                      </div>
+
+                      <div className="profileInfoRow">
+                        <span className="profileLabel">Szerepkör</span>
+                        <span className="profileValue">{roleLabel(user.szerepkor)}</span>
+                      </div>
+
+                      <div className="profileInfoRow">
+                        <span className="profileLabel">Lovarda</span>
+                        <span className="profileValue">
+                          {user.lovarda_nev || <span className="profileMuted">Nincs beállítva</span>}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="profileForm">
+                      <label className="field">
+                        <span className="fieldLabel">Név</span>
+                        <input
+                          className="fieldInput"
+                          value={nev}
+                          onChange={(e) => setNev(e.target.value)}
+                          placeholder="Add meg a neved"
+                          autoComplete="name"
+                        />
+                      </label>
+
+                      <label className="field">
+                        <span className="fieldLabel">Email</span>
+                        <input
+                          className="fieldInput"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Add meg az emailed"
+                          autoComplete="email"
+                        />
+                      </label>
+
+                      <label className="field">
+                        <span className="fieldLabel">Lovarda</span>
+                        <span className="fieldHint">
+                          Ha a lovardád nincs a listában, fel tudod venni az "Új lovarda felvitele" gombbal.
+                        </span>
+                        <select
+                          className="fieldSelect"
+                          value={lovardaId}
+                          onChange={(e) => setLovardaId(e.target.value)}
+                        >
+                          <option value="">— nincs —</option>
+                          {stables.map((s) => (
+                            <option key={s.stable_id} value={s.stable_id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                        
+                      </label>
+                    </div>
+                    <div className="profileSaveRow">
+                      <button className="btn btnPrimary profileSaveButton" onClick={handleSave} type="button">
+                        Mentés
+                      </button>
+                      <button
+                        className="btn btnGhost profileBackButton"
+                        onClick={() => {
+                          setEditMode(false);
+                          setShowPasswordModal(false);
+                          setShowAddStableModal(false);
+                          setNev(user.nev || "");
+                          setEmail(user.email || "");
+                          setLovardaId(user.lovarda_id ?? "");
+                          setCurrentPassword("");
+                          setNewPassword("");
+                          setNewPasswordConfirm("");
+                          setError("");
+                          setSuccess("");
+                        }}
+                        type="button"
+                      >
+                        Vissza
+                      </button>
+                    </div>
+                  </>
+                )}
+              </section>
+            </section>
+          </div>
         )}
+
+        {showAddStableModal && (
+          <div className="profileModalOverlay" onClick={() => setShowAddStableModal(false)}>
+            <div className="profileModal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="profileModalTitle">Új lovarda felvitele</h3>
+
+              <label className="field">
+                <span className="fieldLabel">Lovarda neve</span>
+                <input
+                  className="fieldInput"
+                  placeholder="Lovarda neve"
+                  value={newStableName}
+                  onChange={(e) => setNewStableName(e.target.value)}
+                />
+              </label>
+
+              <div className="profileModalActions">
+                <button className="btn btnPrimary" onClick={handleAddStable} type="button">
+                  Hozzáadás
+                </button>
+                <button
+                  className="btn btnGhost"
+                  onClick={() => {
+                    setShowAddStableModal(false);
+                    setNewStableName("");
+                  }}
+                  type="button"
+                >
+                  Mégse
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showPasswordModal && (
+          <div className="profileModalOverlay" onClick={() => setShowPasswordModal(false)}>
+            <div className="profileModal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="profileModalTitle">Jelszó módosítása</h3>
+              {error ? <div className="profileAlert profileAlertError profileModalInlineAlert">{error}</div> : null}
+
+              <label className="field">
+                <span className="fieldLabel">Jelenlegi jelszó</span>
+                <input
+                  className="fieldInput"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Csak jelszóváltás esetén kötelező"
+                  autoComplete="current-password"
+                />
+              </label>
+
+              <label className="field">
+                <span className="fieldLabel">Új jelszó</span>
+                <input
+                  className="fieldInput"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 6 karakter"
+                  autoComplete="new-password"
+                />
+              </label>
+
+              <label className="field">
+                <span className="fieldLabel">Új jelszó megerősítése</span>
+                <input
+                  className="fieldInput"
+                  type="password"
+                  value={newPasswordConfirm}
+                  onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                  placeholder="Írd be újra az új jelszót"
+                  autoComplete="new-password"
+                />
+              </label>
+
+              <div className="profileModalActions">
+                <button className="btn btnPrimary" onClick={handleSave} type="button">
+                  Mentés
+                </button>
+                <button
+                  className="btn btnGhost"
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setCurrentPassword("");
+                    setNewPassword("");
+                    setNewPasswordConfirm("");
+                  }}
+                  type="button"
+                >
+                  Mégse
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

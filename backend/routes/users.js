@@ -257,4 +257,53 @@ router.delete("/profile/image", requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/users/me
+router.delete("/me", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.felhasznalo_id;
+
+    // Profilkép törlése az adatbázisból
+    const userQ = await pool.query(
+      `SELECT profilkep_url FROM felhasznalo WHERE felhasznalo_id = $1`,
+      [userId]
+    );
+
+    if (!userQ.rows.length) {
+      return res.status(404).json({ message: "Felhasználó nem található." });
+    }
+
+    const profilkepUrl = userQ.rows[0].profilkep_url;
+
+    // Felhasználó törlése
+    await pool.query(
+      `DELETE FROM felhasznalo WHERE felhasznalo_id = $1`,
+      [userId]
+    );
+
+    // Profilkép fájl törlése
+    if (profilkepUrl && String(profilkepUrl).startsWith("/uploads/users/")) {
+      const fileName = path.basename(profilkepUrl);
+      const filePath = path.join(__dirname, "..", "uploads", "users", fileName);
+
+      try {
+        await fs.unlink(filePath);
+      } catch (fileErr) {
+        if (fileErr.code !== "ENOENT") {
+          console.warn("Profilkép fájl törlés sikertelen:", fileErr.message);
+        }
+      }
+    }
+
+    return res.json({
+      message: "Fiók sikeresen törölve.",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Hiba történt a fiók törlés során.",
+      error: err.message,
+    });
+  }
+});
+
 module.exports = router;
