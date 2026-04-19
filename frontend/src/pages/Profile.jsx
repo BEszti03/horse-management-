@@ -13,12 +13,18 @@ function Profile() {
 
   const [editMode, setEditMode] = useState(false);
   const [nev, setNev] = useState("");
+  const [email, setEmail] = useState("");
   const [lovardaId, setLovardaId] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
 
   const [showAddStable, setShowAddStable] = useState(false);
   const [newStableName, setNewStableName] = useState("");
 
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [deletingImage, setDeletingImage] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -38,6 +44,7 @@ function Profile() {
 
         setUser(meData.user);
         setNev(meData.user.nev || "");
+        setEmail(meData.user.email || "");
         setLovardaId(meData.user.lovarda_id ?? "");
 
         const stablesData = await apiFetch("/api/stables", {
@@ -59,17 +66,30 @@ function Profile() {
       setError("");
       setSuccess("");
 
+      const wantsPasswordChange = Boolean(newPassword);
+      if (wantsPasswordChange && newPassword !== newPasswordConfirm) {
+        setError("Az új jelszó és a megerősítés nem egyezik.");
+        return;
+      }
+
       const data = await apiFetch("/api/users/me", {
         method: "PUT",
         body: JSON.stringify({
           nev,
+          email,
           lovarda_id: lovardaId === "" ? null : Number(lovardaId),
+          current_password: wantsPasswordChange ? currentPassword : "",
+          new_password: wantsPasswordChange ? newPassword : "",
         }),
       });
 
       setUser(data.user);
       setNev(data.user?.nev || "");
+      setEmail(data.user?.email || "");
       setLovardaId(data.user?.lovarda_id ?? "");
+      setCurrentPassword("");
+      setNewPassword("");
+      setNewPasswordConfirm("");
       setSuccess("Sikeres mentés!");
       setEditMode(false);
 
@@ -122,7 +142,11 @@ function Profile() {
       }
 
       if (data?.user) {
-        setUser((prev) => ({ ...prev, ...data.user, lovarda_nev: data?.stable?.name || prev?.lovarda_nev }));
+        setUser((prev) => ({
+          ...prev,
+          ...data.user,
+          lovarda_nev: data?.stable?.name || prev?.lovarda_nev,
+        }));
         setNev(data.user.nev || "");
         setLovardaId(data.user.lovarda_id ?? "");
       }
@@ -142,6 +166,115 @@ function Profile() {
       }
     } catch (err) {
       setError(err.message || "Lovarda felvitel hiba.");
+    }
+  }
+
+  async function handleProfileImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      setError("");
+      setSuccess("");
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch("http://localhost:5000/api/users/profile/image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Sikertelen képfeltöltés.");
+      }
+
+      setUser((prev) => ({
+        ...prev,
+        profilkep_url: data.profilkep_url,
+      }));
+
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...parsedUser,
+              profilkep_url: data.profilkep_url,
+            })
+          );
+        } catch {
+          // nincs teendő
+        }
+      }
+
+      setSuccess("Profilkép sikeresen feltöltve.");
+    } catch (err) {
+      setError(err.message || "Hiba történt a profilkép feltöltésekor.");
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleProfileImageDelete() {
+    if (!user?.profilkep_url) return;
+
+    const ok = window.confirm("Biztosan törlöd a profilképet?");
+    if (!ok) return;
+
+    try {
+      setDeletingImage(true);
+      setError("");
+      setSuccess("");
+
+      const response = await fetch("http://localhost:5000/api/users/profile/image", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Sikertelen profilkép törlés.");
+      }
+
+      setUser((prev) => ({
+        ...prev,
+        profilkep_url: null,
+      }));
+
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...parsedUser,
+              profilkep_url: null,
+            })
+          );
+        } catch {
+          // nincs teendő
+        }
+      }
+
+      setSuccess(data.message || "Profilkép törölve.");
+    } catch (err) {
+      setError(err.message || "Hiba történt a profilkép törlésekor.");
+    } finally {
+      setDeletingImage(false);
     }
   }
 
@@ -169,6 +302,45 @@ function Profile() {
 
         {!loading && user && (
           <section className="profileCard">
+            <div className="profileImageSection">
+              <img
+                className="profileAvatar"
+                src={
+                  user.profilkep_url
+                    ? `http://localhost:5000${user.profilkep_url}`
+                    : "/default-avatar.png"
+                }
+                alt="Profilkép"
+              />
+
+              {editMode ? (
+                <>
+                  <label className="btn btnSoft profileUploadButton">
+                    {uploadingImage ? "Feltöltés..." : "Profilkép feltöltése"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfileImageUpload}
+                      hidden
+                    />
+                  </label>
+
+                  {user.profilkep_url ? (
+                    <button
+                      className="btn btnGhost"
+                      type="button"
+                      onClick={handleProfileImageDelete}
+                      disabled={deletingImage || uploadingImage}
+                    >
+                      {deletingImage ? "Törlés..." : "Profilkép törlése"}
+                    </button>
+                  ) : null}
+                </>
+              ) : (
+                <span className="fieldHint">Profilkép módosításához kattints a Profil szerkesztése gombra.</span>
+              )}
+            </div>
+
             {!editMode ? (
               <>
                 <div className="profileInfoGrid">
@@ -216,6 +388,18 @@ function Profile() {
                   </label>
 
                   <label className="field">
+                    <span className="fieldLabel">Email</span>
+                    <input
+                      className="fieldInput"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Add meg az emailed"
+                      autoComplete="email"
+                    />
+                  </label>
+
+                  <label className="field">
                     <span className="fieldLabel">Lovarda</span>
                     <select
                       className="fieldSelect"
@@ -232,6 +416,48 @@ function Profile() {
                     <span className="fieldHint">
                       Tipp: ha a lovardád nincs a listában, fel tudod venni.
                     </span>
+                  </label>
+
+                  <div className="profileDivider" />
+
+                  <div className="profileInlineRow">
+                    <strong>Jelszó módosítása</strong>
+                  </div>
+
+                  <label className="field">
+                    <span className="fieldLabel">Jelenlegi jelszó</span>
+                    <input
+                      className="fieldInput"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Csak jelszóváltás esetén kötelező"
+                      autoComplete="current-password"
+                    />
+                  </label>
+
+                  <label className="field">
+                    <span className="fieldLabel">Új jelszó</span>
+                    <input
+                      className="fieldInput"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Minimum 6 karakter"
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <label className="field">
+                    <span className="fieldLabel">Új jelszó megerősítése</span>
+                    <input
+                      className="fieldInput"
+                      type="password"
+                      value={newPasswordConfirm}
+                      onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                      placeholder="Írd be újra az új jelszót"
+                      autoComplete="new-password"
+                    />
                   </label>
 
                   <div className="profileDivider" />
@@ -273,7 +499,11 @@ function Profile() {
                     onClick={() => {
                       setEditMode(false);
                       setNev(user.nev || "");
+                      setEmail(user.email || "");
                       setLovardaId(user.lovarda_id ?? "");
+                      setCurrentPassword("");
+                      setNewPassword("");
+                      setNewPasswordConfirm("");
                       setShowAddStable(false);
                       setNewStableName("");
                       setError("");
