@@ -535,6 +535,9 @@ function Profile() {
 
               <label className="field">
                 <span className="fieldLabel">Lovarda neve</span>
+                <span className="fieldHint">
+                          Ha felveszel lovardát automatikusan te leszel a lovarda vezetője.
+                </span>
                 <input
                   className="fieldInput"
                   placeholder="Lovarda neve"
