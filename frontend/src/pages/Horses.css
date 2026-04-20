@@ -8,8 +8,69 @@
 
 .horsesMain {
   padding: 24px;
-  max-width: 980px;
+  max-width: 1120px;
   margin: 0 auto;
+}
+
+.horsesLayout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.horsesSidebar {
+  position: sticky;
+  top: 20px;
+  background: rgba(255, 252, 247, 0.92);
+  border: 1px solid rgba(120, 90, 68, 0.14);
+  border-radius: 22px;
+  padding: 14px;
+  box-shadow: 0 12px 28px rgba(75, 46, 31, 0.08);
+}
+
+.horsesSidebarTitle {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #4b2e1f;
+}
+
+.horsesSidebarNav {
+  display: grid;
+  gap: 10px;
+}
+
+.horsesSidebarItem {
+  width: 100%;
+  border: 1px solid #e4cdb3;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fffaf4;
+  color: #5e3d2a;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.horsesSidebarItem:hover {
+  background: #f8ede0;
+  transform: translateX(2px);
+}
+
+.horsesSidebarItem.is-active {
+  background: #7a2f2f;
+  border-color: #7a2f2f;
+  color: #fff;
+}
+
+.horsesContent {
+  min-width: 0;
+}
+
+.horsesContent .horsesCard {
+  margin-top: 0;
 }
 
 .horsesHeader {
@@ -296,6 +357,14 @@
 }
 
 @media (max-width: 860px) {
+  .horsesLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .horsesSidebar {
+    position: static;
+  }
+
   .editGrid {
     grid-template-columns: 1fr;
   }
