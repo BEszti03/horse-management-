@@ -53,6 +53,7 @@ router.get("/", requireAuth, async (req, res) => {
         pt.palya_id,
         pt.felhasznalo_id,
         u.nev AS felhasznalo_nev,
+        u.profilkep_url,
         pt.mettol,
         pt.meddig,
         p.ferohely,
@@ -87,6 +88,7 @@ router.get("/", requireAuth, async (req, res) => {
           palya_id: b.palya_id,
           felhasznalo_id: b.felhasznalo_id,
           felhasznalo_nev: b.felhasznalo_nev,
+          profilkep_url: b.profilkep_url,
           ferohely: b.ferohely,
           lo_id: b.lo_id,
           lo_nev: b.lo_nev,
@@ -106,6 +108,7 @@ router.get("/", requireAuth, async (req, res) => {
         t.tipus,
         t.felhasznalo_id,
         u.nev AS felhasznalo_nev,
+        u.profilkep_url,
         t.lo_id,
         l.nev AS lo_nev
       FROM teendo t
@@ -139,6 +142,7 @@ router.get("/", requireAuth, async (req, res) => {
           statusz: t.statusz,
           felhasznalo_id: t.felhasznalo_id,
           felhasznalo_nev: t.felhasznalo_nev,
+          profilkep_url: t.profilkep_url,
           lo_id: t.lo_id,
           lo_nev: t.lo_nev,
           raw_leiras: t.leiras,

@@ -18,6 +18,8 @@ router.get("/", requireAuth, async (req, res) => {
         v.datum::text AS datum,
         v.lovarda_id,
         l.nev AS lovarda_nev,
+        COALESCE(szervezo.nev, lovardaSzervezo.nev) AS rendezo_nev,
+        COALESCE(szervezo.profilkep_url, lovardaSzervezo.profilkep_url) AS rendezo_profilkep_url,
         EXISTS (
           SELECT 1 
           FROM verseny_felhasznalo vf 
@@ -26,6 +28,15 @@ router.get("/", requireAuth, async (req, res) => {
         ) AS jelentkezett
       FROM verseny v
       JOIN lovarda l ON l.lovarda_id = v.lovarda_id
+      LEFT JOIN felhasznalo szervezo ON szervezo.felhasznalo_id = v.letrehozo_felhasznalo_id
+      LEFT JOIN LATERAL (
+        SELECT f.nev, f.profilkep_url
+        FROM felhasznalo f
+        WHERE f.lovarda_id = v.lovarda_id
+          AND f.szerepkor = 'lovarda_vezeto'
+        ORDER BY f.felhasznalo_id ASC
+        LIMIT 1
+      ) AS lovardaSzervezo ON TRUE
       ORDER BY v.datum
       `,
       [userId]
@@ -174,13 +185,9 @@ router.post("/", requireAuth, async (req, res) => {
 
 /* =========================
    POST – jelentkezés versenyre
-   (csak lovas)
+  (bármely bejelentkezett felhasználó)
 ========================= */
 router.post("/:id/signup", requireAuth, async (req, res) => {
-  if (req.user.szerepkor !== "lovas") {
-    return res.status(403).json({ error: "Csak lovas jelentkezhet" });
-  }
-
   const versenyId = req.params.id;
   const { lo_id } = req.body || {};
 
@@ -230,15 +237,9 @@ router.post("/:id/signup", requireAuth, async (req, res) => {
 
 /* =========================
    DELETE – jelentkezés visszavonása
-   (csak lovas)
+  (bármely bejelentkezett felhasználó)
 ========================= */
 router.delete("/:id/signup", requireAuth, async (req, res) => {
-  if (req.user.szerepkor !== "lovas") {
-    return res
-      .status(403)
-      .json({ error: "Csak lovas vonhatja vissza a jelentkezést" });
-  }
-
   const versenyId = req.params.id;
 
   try {

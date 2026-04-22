@@ -28,6 +28,69 @@ function addDays(date, days) {
   return d;
 }
 
+function toDisplayDateTime(value) {
+  if (!value) return "Nincs megadva";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "Nincs megadva";
+  return d.toLocaleString("hu-HU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function toDisplayInterval(startValue, endValue) {
+  const start = startValue ? new Date(startValue) : null;
+  const end = endValue ? new Date(endValue) : null;
+
+  if (!start || Number.isNaN(start.getTime())) return "Nincs megadva";
+  if (!end || Number.isNaN(end.getTime())) return `${toDisplayDateTime(start)}`;
+
+  const sameDay =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth() &&
+    start.getDate() === end.getDate();
+
+  if (sameDay) {
+    return `${toDisplayDateTime(start)} - ${end.toLocaleTimeString("hu-HU", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  }
+
+  return `${toDisplayDateTime(start)} - ${toDisplayDateTime(end)}`;
+}
+
+function getProfileImageUrl(profilePath) {
+  if (!profilePath) return "/default-avatar.png";
+  return String(profilePath).startsWith("/uploads/")
+    ? `http://localhost:5000${profilePath}`
+    : String(profilePath);
+}
+
+function getOccupancyText(category, props, fallbackTitle) {
+  if (category === "palya") {
+    return props?.lo_nev ? `Pályafoglalás • Ló: ${props.lo_nev}` : "Pályafoglalás";
+  }
+
+  if (category === "teendo") {
+    const typeLabelByCode = {
+      patkolas: "Patkolás",
+      allatorvos: "Állatorvos",
+      verseny: "Verseny",
+      egyeb: "Egyéb",
+    };
+    const typeCode = String(props?.type || "egyeb").toLowerCase();
+    const typeLabel = typeLabelByCode[typeCode] || "Egyéb";
+    const horse = props?.lo_nev ? `Ló: ${props.lo_nev}` : "";
+    return [typeLabel, horse].filter(Boolean).join(" • ");
+  }
+
+  return fallbackTitle || "Elfoglaltság";
+}
+
 function renderEventContent(eventInfo) {
   return (
     <div className="calendarEventContent">
@@ -46,6 +109,7 @@ function Calendar() {
       return null;
     }
   }, []);
+  const currentUserId = Number(user?.felhasznalo_id);
 
   const [horses, setHorses] = useState([]);
 
@@ -89,7 +153,20 @@ function Calendar() {
           if (p.palya_id) p.category = "palya";
           if (p.teendo_id) p.category = "teendo";
         }
-        return { ...ev, extendedProps: p };
+
+        const ownerId = Number(p.felhasznalo_id);
+        const isOwnedByCurrentUser =
+          Number.isFinite(ownerId) && Number.isFinite(currentUserId) && ownerId === currentUserId;
+        const isUserEditableCategory = p.category === "palya" || p.category === "teendo";
+
+        return {
+          ...ev,
+          editable: isUserEditableCategory ? isOwnedByCurrentUser : ev.editable,
+          extendedProps: {
+            ...p,
+            is_own_event: isUserEditableCategory ? isOwnedByCurrentUser : undefined,
+          },
+        };
       });
 
       //Versenyek (mindenki látja)
@@ -109,6 +186,8 @@ function Calendar() {
             nev: c.nev,
             datum: c.datum,
             lovarda_nev: c.lovarda_nev,
+            rendezo_nev: c.rendezo_nev,
+            rendezo_profilkep_url: c.rendezo_profilkep_url,
             jelentkezett: !!c.jelentkezett,
           },
         }));
@@ -152,6 +231,8 @@ function Calendar() {
         nev: p.nev,
         datum: p.datum,
         lovarda_nev: p.lovarda_nev,
+        rendezo_nev: p.rendezo_nev,
+        rendezo_profilkep_url: p.rendezo_profilkep_url,
       });
 
       setType("verseny");
@@ -172,9 +253,30 @@ function Calendar() {
     // Pálya/teendő edit
     if (p.category !== "palya" && p.category !== "teendo") return;
 
+    const ownerId = Number(p.felhasznalo_id);
+    const isOwnEvent =
+      Number.isFinite(ownerId) && Number.isFinite(currentUserId) && ownerId === currentUserId;
+
+    if (!isOwnEvent) {
+      setModalMode("view");
+      setCurrent({
+        calendarApi: clickInfo.view.calendar,
+        category: p.category,
+        isOwnEvent: false,
+        felhasznalo_nev: p.felhasznalo_nev,
+        profilkep_url: p.profilkep_url,
+        foglaltsag: getOccupancyText(p.category, p, ev.title),
+        interval_display: toDisplayInterval(ev.start, ev.end),
+      });
+
+      setModalOpen(true);
+      return;
+    }
+
     setModalMode("edit");
     setCurrent({
       calendarApi: clickInfo.view.calendar,
+      isOwnEvent: true,
       category: p.category,
       palya_id: p.palya_id,
       teendo_id: p.teendo_id,
@@ -321,14 +423,9 @@ function Calendar() {
     }
   }
 
-  // Versenyre jelentkezés (lovas) + ló választás
+  // Versenyre jelentkezés + ló választás
   async function signupToCompetition() {
     if (!current?.verseny_id) return;
-
-    if (user?.szerepkor !== "lovas") {
-      alert("Csak lovas jelentkezhet versenyre.");
-      return;
-    }
 
     try {
       const res = await fetch(`/api/competitions/${current.verseny_id}/signup`, {
@@ -356,14 +453,9 @@ function Calendar() {
     }
   }
 
-  // Verseny jelentkezés visszavonása (lovas)
+  // Verseny jelentkezés visszavonása
   async function withdrawFromCompetition() {
     if (!current?.verseny_id) return;
-
-    if (user?.szerepkor !== "lovas") {
-      alert("Csak lovas vonhatja vissza a jelentkezést.");
-      return;
-    }
 
     if (!window.confirm("Biztosan visszavonod a jelentkezést?")) return;
 
@@ -425,6 +517,11 @@ function Calendar() {
   // Módosítás mentése (pálya/teendő)
   async function saveEditFromModal() {
     if (!current) return;
+
+    if (current.isOwnEvent === false) {
+      closeModal();
+      return;
+    }
 
     // Verseny eseménynél csak jelentkezés/törlés
     if (current.category === "competition") {
@@ -511,6 +608,11 @@ function Calendar() {
   async function deleteCurrent() {
     if (!current) return;
 
+    if (current.isOwnEvent === false) {
+      closeModal();
+      return;
+    }
+
     // Verseny törlése gomb
     if (current.category === "competition") {
       closeModal();
@@ -559,9 +661,19 @@ function Calendar() {
     const ev = changeInfo.event;
     const p = ev.extendedProps || {};
 
+    const ownerId = Number(p.felhasznalo_id);
+    const isOwnEvent =
+      Number.isFinite(ownerId) && Number.isFinite(currentUserId) && ownerId === currentUserId;
+
     // Verseny ne legyen drag/resize, csak napra vehető fel
     if (p.category === "competition") {
       changeInfo.revert();
+      return;
+    }
+
+    if ((p.category === "palya" || p.category === "teendo") && !isOwnEvent) {
+      changeInfo.revert();
+      alert("Másik lovardatag eseménye nem szerkeszthető.");
       return;
     }
 
@@ -640,7 +752,7 @@ function Calendar() {
   }
 
   const canCreateCompetition = user?.szerepkor === "lovarda_vezeto";
-  const canSignupCompetition = user?.szerepkor === "lovas";
+  const canSignupCompetition = !!user;
   const calendarHeight = "calc(100vh - 160px)";
 
   return (
@@ -681,7 +793,9 @@ function Calendar() {
             <div className="calModal" onClick={(e) => e.stopPropagation()}>
               <h3 className="calModalTitle">
                 {current?.category === "competition"
-                  ? "Verseny"
+                  ? "Verseny jelentkezés"
+                  : modalMode === "view"
+                  ? "Lovardatag eseménye"
                   : modalMode === "create"
                   ? "Új esemény"
                   : "Esemény szerkesztése"}
@@ -690,13 +804,22 @@ function Calendar() {
               {/* Verseny kattintás */}
               {current?.category === "competition" ? (
                 <div className="calModalGrid">
-                  <div>
-                    <strong>{current.nev}</strong>
-                    <div className="calMuted">{current.lovarda_nev}</div>
-                    <div className="calSpacerTop">Dátum: {current.datum}</div>
-                    {current.jelentkezett && (
-                      <div className="calSpacerTop">✔ Már jelentkeztél</div>
-                    )}
+                  <div className="calMemberSummary">
+                    <img
+                      className="calMemberAvatar"
+                      src={getProfileImageUrl(current.rendezo_profilkep_url)}
+                      alt={current.rendezo_nev || "Verseny szervezője"}
+                    />
+
+                    <div className="calMemberMeta">
+                      <strong>{current.nev}</strong>
+                      <div className="calMuted">{current.lovarda_nev}</div>
+                      <div className="calMuted">Szervező: {current.rendezo_nev || "Nincs megadva"}</div>
+                      <div className="calSpacerTop">Dátum: {current.datum}</div>
+                      {current.jelentkezett && (
+                        <div className="calSpacerTop">Már jelentkeztél</div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Ló választás csak jelentkezéshez */}
@@ -741,6 +864,36 @@ function Calendar() {
                     )}
                   </div>
                 </div>
+              ) : modalMode === "view" && current?.isOwnEvent === false ? (
+                <>
+                  <div className="calMemberSummary">
+                    <img
+                      className="calMemberAvatar"
+                      src={getProfileImageUrl(current.profilkep_url)}
+                      alt={current.felhasznalo_nev || "Lovardatag"}
+                    />
+
+                    <div className="calMemberMeta">
+                      <div className="calMemberName">{current.felhasznalo_nev || "Ismeretlen felhasználó"}</div>
+                    </div>
+                  </div>
+
+                  <div className="calDetailBox">
+                    <div className="calDetailLabel">Elfoglaltság</div>
+                    <div className="calDetailValue">{current.foglaltsag || "Nincs megadva"}</div>
+                  </div>
+
+                  <div className="calDetailBox">
+                    <div className="calDetailLabel">Időpont</div>
+                    <div className="calDetailValue">{current.interval_display || "Nincs megadva"}</div>
+                  </div>
+
+                  <div className="calActions">
+                    <button className="calBtn calBtnGhost" onClick={closeModal}>
+                      Bezárás
+                    </button>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="calModalGrid">
