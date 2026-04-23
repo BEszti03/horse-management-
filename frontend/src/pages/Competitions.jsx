@@ -85,6 +85,7 @@ function Competitions() {
   const [selectedCompetitionId, setSelectedCompetitionId] = useState(null);
   const [selectedCompetition, setSelectedCompetition] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedStableId, setSelectedStableId] = useState("all");
   const [allStatusFilter, setAllStatusFilter] = useState("all");
   const [loadingLists, setLoadingLists] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -113,16 +114,46 @@ function Competitions() {
     return Array.from(years).sort((a, b) => b - a);
   }, [allCompetitions]);
 
+  const stableOptions = useMemo(() => {
+    const stableMap = new Map();
+
+    allCompetitions.forEach((competition) => {
+      const stableId = competition?.lovarda_id;
+      if (stableId == null) return;
+
+      const stableName = competition?.lovarda_nev || "Ismeretlen lovarda";
+      stableMap.set(String(stableId), stableName);
+    });
+
+    return Array.from(stableMap.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "hu"));
+  }, [allCompetitions]);
+
   const filteredAllCompetitions = useMemo(() => {
     return allCompetitions.filter((competition) => {
       const year = getCompetitionYear(competition);
       if (year !== selectedYear) return false;
 
+      if (selectedStableId !== "all") {
+        const competitionStableId = String(competition?.lovarda_id ?? "");
+        if (competitionStableId !== selectedStableId) return false;
+      }
+
       if (allStatusFilter === "future") return isFutureOrToday(competition);
       if (allStatusFilter === "past") return !isFutureOrToday(competition);
       return true;
     });
-  }, [allCompetitions, selectedYear, allStatusFilter]);
+  }, [allCompetitions, selectedYear, selectedStableId, allStatusFilter]);
+
+  useEffect(() => {
+    if (selectedStableId === "all") return;
+
+    const exists = stableOptions.some((stable) => stable.id === selectedStableId);
+    if (!exists) {
+      setSelectedStableId("all");
+    }
+  }, [stableOptions, selectedStableId]);
 
   const activeCompetitions = useMemo(() => {
     if (activeSection === "all") return filteredAllCompetitions;
@@ -435,13 +466,28 @@ function Competitions() {
                     </select>
                   </label>
 
+                  <label className="competitionsFilterField">
+                    <span>Lovarda</span>
+                    <select
+                      value={selectedStableId}
+                      onChange={(event) => setSelectedStableId(event.target.value)}
+                    >
+                      <option value="all">Összes lovarda</option>
+                      {stableOptions.map((stable) => (
+                        <option key={stable.id} value={stable.id}>
+                          {stable.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
                   <div className="competitionsFilterTabs" role="tablist" aria-label="Verseny szűrés állapot szerint">
                     <button
                       type="button"
                       className={`competitionsFilterTab ${allStatusFilter === "all" ? "is-active" : ""}`}
                       onClick={() => setAllStatusFilter("all")}
                     >
-                      Minden
+                      Összes
                     </button>
                     <button
                       type="button"
