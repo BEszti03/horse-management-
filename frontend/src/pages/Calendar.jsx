@@ -28,6 +28,16 @@ function addDays(date, days) {
   return d;
 }
 
+function isFutureOrToday(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return false;
+  date.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date >= today;
+}
+
 function toDisplayDateTime(value) {
   if (!value) return "Nincs megadva";
   const d = new Date(value);
@@ -112,6 +122,7 @@ function Calendar() {
   const currentUserId = Number(user?.felhasznalo_id);
 
   const [horses, setHorses] = useState([]);
+  const [stables, setStables] = useState([]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create"); // create | edit
@@ -125,6 +136,7 @@ function Calendar() {
 
   //Verseny jelentkezéshez kiválasztott ló
   const [competitionHorseId, setCompetitionHorseId] = useState("");
+  const [competitionStableId, setCompetitionStableId] = useState("");
 
   useEffect(() => {
     async function loadHorses() {
@@ -137,6 +149,25 @@ function Calendar() {
     }
     if (token) loadHorses();
   }, [token]);
+
+  useEffect(() => {
+    async function loadStables() {
+      if (user?.szerepkor !== "admin") {
+        setStables([]);
+        return;
+      }
+
+      try {
+        const data = await apiFetch("/api/stables");
+        const items = Array.isArray(data?.stables) ? data.stables : [];
+        setStables(items);
+      } catch {
+        setStables([]);
+      }
+    }
+
+    if (token) loadStables();
+  }, [token, user?.szerepkor]);
 
   //Naptár események betöltése + versenyek beolvasztása
   async function fetchEvents(info, successCallback, failureCallback) {
@@ -185,6 +216,7 @@ function Calendar() {
             verseny_id: c.verseny_id,
             nev: c.nev,
             datum: c.datum,
+            jelentkezheto: c.jelentkezheto ?? isFutureOrToday(c.datum),
             lovarda_nev: c.lovarda_nev,
             rendezo_nev: c.rendezo_nev,
             rendezo_profilkep_url: c.rendezo_profilkep_url,
@@ -210,6 +242,7 @@ function Calendar() {
     setTitle("");
     setHorseId("");
     setCompetitionHorseId("");
+    setCompetitionStableId(user?.szerepkor === "admin" ? String(user?.lovarda_id || "") : "");
     setStartLocal(toLocalInputValue(selectionInfo.start));
     setEndLocal(toLocalInputValue(selectionInfo.end));
 
@@ -228,6 +261,7 @@ function Calendar() {
         category: "competition",
         verseny_id: p.verseny_id,
         jelentkezett: !!p.jelentkezett,
+        jelentkezheto: !!p.jelentkezheto,
         nev: p.nev,
         datum: p.datum,
         lovarda_nev: p.lovarda_nev,
@@ -315,10 +349,10 @@ function Calendar() {
       const start = new Date(startLocal);
       const end = new Date(endLocal);
 
-      // Verseny létrehozás (csak lovarda_vezeto)
+      // Verseny létrehozás (lovarda_vezeto vagy admin)
       if (type === "verseny") {
-        if (user?.szerepkor !== "lovarda_vezeto") {
-          alert("Csak lovarda vezető hozhat létre versenyt.");
+        if (user?.szerepkor !== "lovarda_vezeto" && user?.szerepkor !== "admin") {
+          alert("Csak lovarda vezető vagy admin hozhat létre versenyt.");
           return;
         }
 
@@ -330,13 +364,23 @@ function Calendar() {
 
         const datum = startLocal.slice(0, 10); // YYYY-MM-DD
 
+        const selectedStableId = competitionStableId ? Number(competitionStableId) : null;
+        if (user?.szerepkor === "admin" && !selectedStableId) {
+          alert("Adminként válassz lovardát a versenyhez.");
+          return;
+        }
+
         const res = await fetch(`/api/competitions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ nev: name, datum }),
+          body: JSON.stringify({
+            nev: name,
+            datum,
+            lovarda_id: user?.szerepkor === "admin" ? selectedStableId : undefined,
+          }),
         });
 
         const data = await res.json().catch(() => ({}));
@@ -426,6 +470,11 @@ function Calendar() {
   // Versenyre jelentkezés + ló választás
   async function signupToCompetition() {
     if (!current?.verseny_id) return;
+
+    if (!current?.jelentkezheto) {
+      alert("Múltbeli versenyre már nem lehet jelentkezni.");
+      return;
+    }
 
     try {
       const res = await fetch(`/api/competitions/${current.verseny_id}/signup`, {
@@ -751,7 +800,7 @@ function Calendar() {
     }
   }
 
-  const canCreateCompetition = user?.szerepkor === "lovarda_vezeto";
+  const canCreateCompetition = user?.szerepkor === "lovarda_vezeto" || user?.szerepkor === "admin";
   const canSignupCompetition = !!user;
   const calendarHeight = "calc(100vh - 160px)";
 
@@ -816,6 +865,9 @@ function Calendar() {
                       <div className="calMuted">{current.lovarda_nev}</div>
                       <div className="calMuted">Szervező: {current.rendezo_nev || "Nincs megadva"}</div>
                       <div className="calSpacerTop">Dátum: {current.datum}</div>
+                      {!current.jelentkezheto && (
+                        <div className="calSpacerTop">Ez a verseny már elmúlt, jelentkezés nem lehetséges.</div>
+                      )}
                       {current.jelentkezett && (
                         <div className="calSpacerTop">Már jelentkeztél</div>
                       )}
@@ -823,7 +875,7 @@ function Calendar() {
                   </div>
 
                   {/* Ló választás csak jelentkezéshez */}
-                  {canSignupCompetition && !current.jelentkezett && (
+                  {canSignupCompetition && !current.jelentkezett && current.jelentkezheto && (
                     <div className="calField">
                       <span>Ló kiválasztása (opcionális)</span>
                       <select
@@ -851,7 +903,7 @@ function Calendar() {
                       </button>
                     )}
 
-                    {canSignupCompetition && !current.jelentkezett && (
+                    {canSignupCompetition && !current.jelentkezett && current.jelentkezheto && (
                       <button className="calBtn calBtnPrimary" onClick={signupToCompetition}>
                         Jelentkezés
                       </button>
@@ -936,6 +988,23 @@ function Calendar() {
                           onChange={(e) => setTitle(e.target.value)}
                           placeholder={type === "verseny" ? "Pl. Tavaszi kupa" : "Pl. fontos információ…"}
                         />
+                      </label>
+                    )}
+
+                    {type === "verseny" && user?.szerepkor === "admin" && (
+                      <label className="calField">
+                        <span>Lovarda</span>
+                        <select
+                          value={competitionStableId}
+                          onChange={(e) => setCompetitionStableId(e.target.value)}
+                        >
+                          <option value="">— válassz lovardát —</option>
+                          {stables.map((stable) => (
+                            <option key={stable.stable_id} value={String(stable.stable_id)}>
+                              {stable.name}
+                            </option>
+                          ))}
+                        </select>
                       </label>
                     )}
 
