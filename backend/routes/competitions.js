@@ -16,6 +16,7 @@ router.get("/", requireAuth, async (req, res) => {
         v.verseny_id,
         v.nev,
         v.datum::text AS datum,
+        (v.datum >= CURRENT_DATE) AS jelentkezheto,
         v.lovarda_id,
         l.nev AS lovarda_nev,
         COALESCE(szervezo.nev, lovardaSzervezo.nev) AS rendezo_nev,
@@ -62,6 +63,7 @@ router.get("/managed", requireAuth, async (req, res) => {
         v.verseny_id,
         v.nev,
         v.datum::text AS datum,
+        (v.datum >= CURRENT_DATE) AS jelentkezheto,
         v.lovarda_id,
         l.nev AS lovarda_nev
       FROM verseny v
@@ -103,6 +105,7 @@ router.get("/managed/entries", requireAuth, async (req, res) => {
         f.felhasznalo_id,
         f.nev AS felhasznalo_nev,
         f.email,
+        f.profilkep_url,
         l.lo_id,
         l.nev AS lo_nev,
         lv.nev AS lovarda_nev
@@ -139,15 +142,111 @@ router.get("/managed/entries", requireAuth, async (req, res) => {
 });
 
 /* =========================
+   GET – verseny részletei és jelentkezői
+   (minden bejelentkezett felhasználó)
+========================= */
+router.get("/:id", requireAuth, async (req, res) => {
+  const competitionId = Number(req.params.id);
+
+  if (Number.isNaN(competitionId)) {
+    return res.status(400).json({ error: "Érvénytelen verseny azonosító." });
+  }
+
+  try {
+    const userId = req.user.felhasznalo_id;
+
+    const competitionResult = await pool.query(
+      `
+      SELECT 
+        v.verseny_id,
+        v.nev,
+        v.datum::text AS datum,
+        (v.datum >= CURRENT_DATE) AS jelentkezheto,
+        v.lovarda_id,
+        l.nev AS lovarda_nev,
+        COALESCE(szervezo.nev, lovardaSzervezo.nev) AS rendezo_nev,
+        COALESCE(szervezo.profilkep_url, lovardaSzervezo.profilkep_url) AS rendezo_profilkep_url,
+        EXISTS (
+          SELECT 1 
+          FROM verseny_felhasznalo vf 
+          WHERE vf.verseny_id = v.verseny_id 
+            AND vf.felhasznalo_id = $2
+        ) AS jelentkezett,
+        (
+          SELECT COUNT(*)
+          FROM verseny_felhasznalo vf
+          WHERE vf.verseny_id = v.verseny_id
+        ) AS jelentkezok_szama
+      FROM verseny v
+      JOIN lovarda l ON l.lovarda_id = v.lovarda_id
+      LEFT JOIN felhasznalo szervezo ON szervezo.felhasznalo_id = v.letrehozo_felhasznalo_id
+      LEFT JOIN LATERAL (
+        SELECT f.nev, f.profilkep_url
+        FROM felhasznalo f
+        WHERE f.lovarda_id = v.lovarda_id
+          AND f.szerepkor = 'lovarda_vezeto'
+        ORDER BY f.felhasznalo_id ASC
+        LIMIT 1
+      ) AS lovardaSzervezo ON TRUE
+      WHERE v.verseny_id = $1
+      `,
+      [competitionId, userId]
+    );
+
+    if (competitionResult.rowCount === 0) {
+      return res.status(404).json({ error: "Nincs ilyen verseny." });
+    }
+
+    const entriesResult = await pool.query(
+      `
+      SELECT
+        v.verseny_id,
+        v.nev AS verseny_nev,
+        v.datum::text AS datum,
+        f.felhasznalo_id,
+        f.nev AS felhasznalo_nev,
+        f.email,
+        f.profilkep_url,
+        l.lo_id,
+        l.nev AS lo_nev,
+        lv.nev AS lovarda_nev
+      FROM verseny v
+      JOIN lovarda lv ON lv.lovarda_id = v.lovarda_id
+      JOIN verseny_felhasznalo vf ON vf.verseny_id = v.verseny_id
+      LEFT JOIN lo l
+        ON l.felhasznalo_id = vf.felhasznalo_id
+       AND l.lo_id IN (
+         SELECT vl.lo_id
+         FROM verseny_lo vl
+         WHERE vl.verseny_id = v.verseny_id
+       )
+      JOIN felhasznalo f ON f.felhasznalo_id = vf.felhasznalo_id
+      WHERE v.verseny_id = $1
+      ORDER BY f.nev, l.nev
+      `,
+      [competitionId]
+    );
+
+    return res.json({
+      competition: competitionResult.rows[0],
+      entries: entriesResult.rows,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Hiba a verseny részleteinek lekérésekor" });
+  }
+});
+
+/* =========================
    POST – verseny létrehozás
    (csak lovarda_vezeto)
 ========================= */
 router.post("/", requireAuth, async (req, res) => {
-  if (req.user.szerepkor !== "lovarda_vezeto") {
+  if (req.user.szerepkor !== "lovarda_vezeto" && req.user.szerepkor !== "admin") {
     return res.status(403).json({ error: "Nincs jogosultság" });
   }
 
-  const { nev, datum } = req.body || {};
+  const { nev, datum, lovarda_id } = req.body || {};
   if (!nev || !datum) {
     return res.status(400).json({ error: "Hiányzó mező(k): nev, datum" });
   }
@@ -155,12 +254,32 @@ router.post("/", requireAuth, async (req, res) => {
   try {
     const userId = req.user.felhasznalo_id;
 
-    const userRes = await pool.query(
-      "SELECT lovarda_id FROM felhasznalo WHERE felhasznalo_id = $1",
-      [userId]
-    );
+    let lovardaId = null;
 
-    const lovardaId = userRes.rows[0]?.lovarda_id;
+    if (req.user.szerepkor === "admin") {
+      lovardaId = Number(lovarda_id);
+      if (Number.isNaN(lovardaId)) {
+        return res.status(400).json({
+          error: "Admin létrehozásnál kötelező egy érvényes lovarda kiválasztása.",
+        });
+      }
+
+      const stableExists = await pool.query(
+        "SELECT lovarda_id FROM lovarda WHERE lovarda_id = $1",
+        [lovardaId]
+      );
+
+      if (stableExists.rowCount === 0) {
+        return res.status(404).json({ error: "A kiválasztott lovarda nem található." });
+      }
+    } else {
+      const userRes = await pool.query(
+        "SELECT lovarda_id FROM felhasznalo WHERE felhasznalo_id = $1",
+        [userId]
+      );
+
+      lovardaId = userRes.rows[0]?.lovarda_id;
+    }
 
     if (!lovardaId) {
       return res.status(400).json({
@@ -193,6 +312,25 @@ router.post("/:id/signup", requireAuth, async (req, res) => {
 
   try {
     const userId = req.user.felhasznalo_id;
+
+    const competitionRes = await pool.query(
+      `SELECT datum FROM verseny WHERE verseny_id = $1`,
+      [versenyId]
+    );
+
+    if (competitionRes.rowCount === 0) {
+      return res.status(404).json({ error: "Nincs ilyen verseny." });
+    }
+
+    const competitionDate = new Date(competitionRes.rows[0].datum);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(competitionDate.getTime()) || competitionDate < today) {
+      return res.status(400).json({
+        error: "Múltbeli versenyre már nem lehet jelentkezni.",
+      });
+    }
 
     // Jelentkezés a versenyre
     await pool.query(
@@ -244,6 +382,25 @@ router.delete("/:id/signup", requireAuth, async (req, res) => {
 
   try {
     const userId = req.user.felhasznalo_id;
+
+    const competitionRes = await pool.query(
+      `SELECT datum FROM verseny WHERE verseny_id = $1`,
+      [versenyId]
+    );
+
+    if (competitionRes.rowCount === 0) {
+      return res.status(404).json({ error: "Nincs ilyen verseny." });
+    }
+
+    const competitionDate = new Date(competitionRes.rows[0].datum);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(competitionDate.getTime()) || competitionDate < today) {
+      return res.status(400).json({
+        error: "Múltbeli versenyről már nem lehet lejelentkezni.",
+      });
+    }
 
     // jelentkezés törlése
     await pool.query(
@@ -358,6 +515,7 @@ router.get("/entries", requireAuth, async (req, res) => {
         f.felhasznalo_id,
         f.nev AS felhasznalo_nev,
         f.email,
+        f.profilkep_url,
         l.lo_id,
         l.nev AS lo_nev,
         lv.nev AS lovarda_nev
