@@ -361,8 +361,14 @@
     grid-template-columns: 1fr;
   }
 
+  .horsesContent {
+    order: 1;
+  }
+
   .horsesSidebar {
+    order: 2;
     position: static;
+    margin-top: 10px;
   }
 
   .editGrid {

@@ -165,6 +165,8 @@
 .profileValue {
   color: #3f2712;
   font-size: 15px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .profileMuted {
@@ -408,20 +410,24 @@
 }
 
 /* Responsive */
-@media (max-width: 560px) {
-  .profileMain {
-    padding: 16px;
-  }
-
+@media (max-width: 900px) {
   .profileLayout {
     grid-template-columns: 1fr;
   }
 
-  .profileSidebar {
-    position: relative;
-    top: auto;
+  .profileContent {
+    order: 1;
   }
 
+  .profileSidebar {
+    order: 2;
+    position: relative;
+    top: auto;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 720px) {
   .profileInfoRow {
     grid-template-columns: 1fr;
   }
@@ -436,6 +442,16 @@
 
   .profileActionsSplit {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .profileMain {
+    padding: 16px;
+  }
+
+  .profileCard {
+    padding: 14px;
   }
 }
 
