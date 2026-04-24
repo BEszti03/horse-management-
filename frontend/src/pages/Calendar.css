@@ -84,6 +84,42 @@
   white-space: normal;
 }
 
+.calendar .fc .calendarEventCompetition {
+  background: #d4a017;
+  border-color: #b8860b;
+  color: #2f2310;
+}
+
+.calendar .fc .calendarEventPalya {
+  background: #7a4f2a;
+  border-color: #603b1f;
+  color: #fff;
+}
+
+.calendar .fc .calendarEventTodoPatkolas {
+  background: #7a1f2a;
+  border-color: #5a1220;
+  color: #fff;
+}
+
+.calendar .fc .calendarEventTodoAllatorvos {
+  background: #c06419;
+  border-color: #cc6e00;
+  color: #fff;
+}
+
+.calendar .fc .calendarEventTodoVerseny {
+  background: #8a5630;
+  border-color: #6e4020;
+  color: #fff;
+}
+
+.calendar .fc .calendarEventTodoEgyeb {
+  background: #7a1f2a;
+  border-color: #5a1220;
+  color: #fff;
+}
+
 .calendarEventContent {
   display: grid;
   gap: 1px;
@@ -114,10 +150,12 @@
 
 /* A “most” idővonal*/
 .calendar .fc-timegrid-now-indicator-line {
-  border-color: rgba(122, 79, 42, 0.9);
+  border-color: #ff2d55;
+  border-width: 1px;
+  box-shadow: 0 0 0 1px rgba(255, 45, 85, 0.18);
 }
 .calendar .fc-timegrid-now-indicator-arrow {
-  border-color: rgba(122, 79, 42, 0.9);
+  border-color: #ff2d55;
 }
 
 /* overlay + panel */

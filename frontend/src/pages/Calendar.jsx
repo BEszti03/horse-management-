@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import huLocale from "@fullcalendar/core/locales/hu";
 
 import { apiFetch } from "../utils/api";
 
@@ -108,6 +109,24 @@ function renderEventContent(eventInfo) {
       <div className="calendarEventTitle">{eventInfo.event.title}</div>
     </div>
   );
+}
+
+function getEventClassNames(arg) {
+  const props = arg?.event?.extendedProps || {};
+  const category = String(props.category || "").toLowerCase();
+
+  if (category === "competition") return ["calendarEventCompetition"];
+  if (category === "palya") return ["calendarEventPalya"];
+
+  if (category === "teendo") {
+    const todoType = String(props.type || "egyeb").toLowerCase();
+    if (todoType === "patkolas") return ["calendarEventTodoPatkolas"];
+    if (todoType === "allatorvos") return ["calendarEventTodoAllatorvos"];
+    if (todoType === "verseny") return ["calendarEventTodoVerseny"];
+    return ["calendarEventTodoEgyeb"];
+  }
+
+  return [];
 }
 
 function Calendar() {
@@ -803,6 +822,12 @@ function Calendar() {
   const canCreateCompetition = user?.szerepkor === "lovarda_vezeto" || user?.szerepkor === "admin";
   const canSignupCompetition = !!user;
   const calendarHeight = "calc(100vh - 160px)";
+  const calendarButtonText = {
+    today: "Ma",
+    month: "Hónap",
+    week: "Hét",
+    day: "Nap",
+  };
 
   return (
     <div>
@@ -813,6 +838,8 @@ function Calendar() {
         <div className="calendar">
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            locale={huLocale}
+            buttonText={calendarButtonText}
             initialView="timeGridWeek"
             headerToolbar={{
               left: "prev,next today",
@@ -834,6 +861,7 @@ function Calendar() {
             eventResize={onEventChange}
             eventClick={openEditModal}
             eventContent={renderEventContent}
+            eventClassNames={getEventClassNames}
           />
         </div>
 
@@ -1055,7 +1083,7 @@ function Calendar() {
                     </button>
                   </div>
 
-                  <p className="calTip">Tipp: drag&drop / resize működik.</p>
+                  <p className="calTip">Tipp: áthúzás és méretezés is működik.</p>
                 </>
               )}
             </div>
