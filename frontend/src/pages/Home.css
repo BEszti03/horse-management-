@@ -35,6 +35,88 @@
   font-size: 14px;
 }
 
+.welcomeModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(44, 28, 14, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.welcomeModal {
+  position: relative;
+  overflow: hidden;
+  width: min(620px, 100%);
+  border-radius: 22px;
+  border: 1px solid rgba(137, 95, 51, 0.3);
+  background:
+    radial-gradient(120% 120% at 10% 0%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 249, 241, 0.94) 45%, rgba(252, 242, 226, 0.96) 100%),
+    #fff9f1;
+  box-shadow:
+    0 24px 50px rgba(40, 23, 10, 0.28),
+    0 2px 0 rgba(255, 255, 255, 0.6) inset;
+  padding: 22px;
+  color: #3f2712;
+}
+
+.welcomeModal::before {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -110px;
+  top: -110px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(200, 155, 79, 0.18) 0%, rgba(200, 155, 79, 0) 72%);
+  pointer-events: none;
+}
+
+.welcomeModalTitle {
+  margin: 0 0 12px;
+  font-size: 28px;
+  letter-spacing: 0.2px;
+}
+
+.welcomeModal p {
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.welcomeModalList {
+  margin: 0 0 18px;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.welcomeModalButton {
+  display: block;
+  min-width: 150px;
+  margin: 10px auto 0;
+  border: 1px solid #7a4a24;
+  border-radius: 999px;
+  padding: 11px 24px;
+  background: linear-gradient(160deg, #83502a 0%, #5a3418 100%);
+  color: #fff8f0;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(63, 39, 18, 0.24);
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.welcomeModalButton:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 12px 24px rgba(63, 39, 18, 0.28);
+}
+
 
 .homeGrid {
   display: grid;
@@ -423,5 +505,13 @@
 @media (max-width: 560px) {
   .homeMain {
     padding: 16px;
+  }
+
+  .welcomeModal {
+    padding: 16px;
+  }
+
+  .welcomeModalTitle {
+    font-size: 23px;
   }
 }

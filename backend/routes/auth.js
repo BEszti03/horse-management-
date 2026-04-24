@@ -64,7 +64,7 @@ router.post("/login", async (req, res) => {
     email = String(email).toLowerCase().trim();
 
     const found = await pool.query(
-      `SELECT felhasznalo_id, nev, email, szerepkor, lovarda_id, jelszo_hash
+      `SELECT felhasznalo_id, nev, email, szerepkor, lovarda_id, jelszo_hash, elso_belepes
        FROM felhasznalo
        WHERE lower(email) = lower($1)`,
       [email]
@@ -78,8 +78,12 @@ router.post("/login", async (req, res) => {
     const ok = await bcrypt.compare(jelszo, user.jelszo_hash);
     if (!ok) return res.status(401).json({ message: "Hibás email vagy jelszó." });
 
+    const hasStable = user.lovarda_id !== null && typeof user.lovarda_id !== "undefined";
+    const shouldShowOnboarding = !hasStable;
+
     const token = signToken(user);
     delete user.jelszo_hash;
+    user.elso_belepes = shouldShowOnboarding;
 
     return res.json({ user, token });
   } catch (err) {

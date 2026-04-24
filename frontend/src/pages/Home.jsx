@@ -116,6 +116,7 @@ function sortTodosCompletedLast(items) {
 }
 
 function Home() {
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [weeklyTodos, setWeeklyTodos] = useState([]);
   const [weeklyCompetitions, setWeeklyCompetitions] = useState([]);
   const [miniCalendarEventDays, setMiniCalendarEventDays] = useState({});
@@ -365,6 +366,30 @@ function Home() {
   const monthCells = useMemo(() => buildMonthGrid(previewMonth), [previewMonth]);
   const todayYmd = toYMD(new Date());
 
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) return;
+
+      const parsedUser = JSON.parse(storedUser);
+      if (parsedUser?.lovarda_id !== null && typeof parsedUser?.lovarda_id !== "undefined") {
+        return;
+      }
+      if (!parsedUser?.elso_belepes) return;
+
+      setShowWelcomeModal(true);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...parsedUser,
+          elso_belepes: false,
+        })
+      );
+    } catch {
+      // nincs teendő
+    }
+  }, []);
+
   function goPrevMonth() {
     setPreviewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   }
@@ -423,6 +448,39 @@ function Home() {
   return (
     <div className="homePage">
       <Header />
+
+      {showWelcomeModal && (
+        <div className="welcomeModalOverlay" onClick={() => setShowWelcomeModal(false)}>
+          <div className="welcomeModal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="welcomeModalTitle">Üdv a Lóidőben!</h2>
+
+            <p>
+              Ez az alkalmazás segít a lovardai mindennapok rendszerezésében:
+              kezelheted lovaid adatait, követheted a teendőket, edzéseket és versenyeket egy helyen.
+            </p>
+
+            <p>
+              A teljes funkcionalitás eléréséhez először csatlakoznod kell egy lovardához,
+              vagy létre kell hoznod egy sajátot a profilodban.
+            </p>
+
+            <p>Így tudsz majd:</p>
+            <ul className="welcomeModalList">
+              <li>teendőket és edzéseket rögzíteni</li>
+              <li>versenyeket kezelni</li>
+              <li>a lovaid adatait nyilvántartani</li>
+            </ul>
+
+            <button
+              type="button"
+              className="welcomeModalButton"
+              onClick={() => setShowWelcomeModal(false)}
+            >
+              Rendben
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="homeMain">
         <div className="homeHeader">
