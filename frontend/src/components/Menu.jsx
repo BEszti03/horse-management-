@@ -15,8 +15,6 @@ function Menu() {
   }
 
   const isAdmin = user?.szerepkor === "admin";
-  const isCompetitionManager = isAdmin || user?.szerepkor === "lovarda_vezeto";
-
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -65,11 +63,9 @@ function Menu() {
           Naptár
         </Link>
 
-        {isCompetitionManager && (
-          <Link className="menu__item" to="/competitions" onClick={onItemClick}>
-            Saját versenyek
-          </Link>
-        )}
+        <Link className="menu__item" to="/competitions" onClick={onItemClick}>
+          Versenyek
+        </Link>
 
         {isAdmin && (
           <Link className="menu__item" to="/admin" onClick={onItemClick}>
