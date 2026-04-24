@@ -80,12 +80,41 @@
   margin-top: 12px;
 }
 
-.homeSectionTitle {
+.homeSubSection {
+  margin-top: 10px;
+}
+
+.homeSubSection + .homeSubSection {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(137, 95, 51, 0.2);
+}
+
+.homeSubSectionTitle {
   margin: 0 0 8px;
+  color: rgba(63, 39, 18, 0.78);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.homeSectionTitle {
+  margin: 0 0 12px;
   color: rgba(63, 39, 18, 0.9);
   font-size: 14px;
   letter-spacing: 0.2px;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.homeSectionIcon {
+  width: 40px;
+  height: 40px;
+  opacity: 0.9;
+  flex-shrink: 0;
 }
 
 
@@ -119,6 +148,39 @@
   border-radius: 14px;
   background: rgba(246, 232, 212, 0.55);
   border: 1px solid rgba(137, 95, 51, 0.18);
+  transition: all 0.2s ease;
+}
+
+.homeListItem:has(.homeCheckbox) {
+  grid-template-columns: 20px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+}
+
+.homeListItem.is-completed {
+  opacity: 0.65;
+  background: rgba(200, 200, 200, 0.2);
+}
+
+.homeListItem.is-completed .homeItemText {
+  text-decoration: line-through;
+  color: rgba(63, 39, 18, 0.55);
+}
+
+.homeCheckbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #7a4f2a;
+  flex-shrink: 0;
+}
+
+.homeCheckboxLabel {
+  cursor: pointer;
+  user-select: none;
+  display: block;
 }
 
 .homeBullet {
@@ -199,6 +261,163 @@
   color: rgba(63, 39, 18, 0.62);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.homeMiniCalendar {
+  display: grid;
+  gap: 10px;
+}
+
+.homeMiniCalendarHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.homeMiniCalendarNav {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.homeMiniNavBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(137, 95, 51, 0.28);
+  background: #fff8ef;
+  color: #5f3a1c;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.homeMiniMonthLabel {
+  margin: 0;
+  color: rgba(63, 39, 18, 0.8);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.homeMiniMonthLabelInHead {
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+
+.homeMiniWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homeMiniWeekdays span {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(63, 39, 18, 0.62);
+  font-weight: 700;
+}
+
+.homeMiniDaysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homeMiniDay {
+  position: relative;
+  min-height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(137, 95, 51, 0.16);
+  background: rgba(246, 232, 212, 0.42);
+  color: #4f321a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.homeMiniDay.is-outside {
+  opacity: 0.45;
+}
+
+.homeMiniDay.is-today {
+  border: 2px solid rgba(122, 74, 36, 0.7);
+  background: rgba(122, 74, 36, 0.22);
+  color: #3f2712;
+  font-weight: 900;
+  box-shadow: 0 0 0 1px rgba(122, 74, 36, 0.4) inset;
+}
+
+/* Verseny – Arany szín */
+.homeMiniDay.has-competition {
+  border-color: rgba(212, 175, 55, 0.6);
+  background: rgba(212, 175, 55, 0.22);
+}
+
+.homeMiniDay.has-competition::before {
+  content: "🏆";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+}
+
+/* Teendő – Barna szín */
+.homeMiniDay.has-todo {
+  border-color: rgba(122, 74, 36, 0.5);
+  background: rgba(122, 74, 36, 0.16);
+}
+
+.homeMiniDay.has-todo::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(122, 74, 36, 0.8);
+  box-shadow: 0 0 0 1px rgba(246, 232, 212, 0.9);
+}
+
+/* Verseny + Teendő */
+.homeMiniDay.has-competition.has-todo {
+  border-color: rgba(180, 140, 60, 0.5);
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.18) 0%,
+    rgba(122, 74, 36, 0.12) 100%
+  );
+}
+
+.homeMiniCalendarCta {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #7a4a24;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(160deg, #83502a 0%, #5a3418 100%);
+  color: #fff8f0;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 22px rgba(63, 39, 18, 0.16);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.homeMiniCalendarCta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 14px 24px rgba(63, 39, 18, 0.22);
+}
+
+.homeMiniCalendarCta span:last-child {
+  font-size: 15px;
+  line-height: 1;
 }
 
 @media (max-width: 560px) {

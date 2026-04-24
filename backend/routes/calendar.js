@@ -56,6 +56,7 @@ router.get("/", requireAuth, async (req, res) => {
         u.profilkep_url,
         pt.mettol,
         pt.meddig,
+        pt.elvegzett,
         p.ferohely,
         pt.lo_id,
         l.nev AS lo_nev
@@ -86,6 +87,7 @@ router.get("/", requireAuth, async (req, res) => {
           category: "palya",
           type: "palya",
           palya_id: b.palya_id,
+          elvegzett: !!b.elvegzett,
           felhasznalo_id: b.felhasznalo_id,
           felhasznalo_nev: b.felhasznalo_nev,
           profilkep_url: b.profilkep_url,
@@ -102,6 +104,7 @@ router.get("/", requireAuth, async (req, res) => {
       SELECT
         t.teendo_id,
         t.leiras,
+        t.elvegzett,
         t.statusz,
         t.kezdeti_ido,
         t.hatarido,
@@ -139,6 +142,7 @@ router.get("/", requireAuth, async (req, res) => {
           category: "teendo",
           type: t.tipus || "egyeb",
           teendo_id: t.teendo_id,
+          elvegzett: !!t.elvegzett,
           statusz: t.statusz,
           felhasznalo_id: t.felhasznalo_id,
           felhasznalo_nev: t.felhasznalo_nev,
@@ -226,10 +230,10 @@ router.post("/palya-booking", requireAuth, async (req, res) => {
     // palya_tartozkodas (+ lo_id)
     await client.query(
       `
-      INSERT INTO palya_tartozkodas (palya_id, felhasznalo_id, mettol, meddig, lo_id)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO palya_tartozkodas (palya_id, felhasznalo_id, mettol, meddig, lo_id, elvegzett)
+      VALUES ($1, $2, $3, $4, $5, $6)
       `,
-      [palyaId, userId, startDt, endDt, horseId]
+      [palyaId, userId, startDt, endDt, horseId, false]
     );
 
     await client.query("COMMIT");
@@ -313,6 +317,37 @@ router.put("/palya-booking/:palyaId", requireAuth, async (req, res) => {
     res.status(500).json({ message: "Módosítási hiba." });
   } finally {
     client.release();
+  }
+});
+
+router.patch("/palya-booking/:palyaId/elvegzett", requireAuth, async (req, res) => {
+  const userId = req.user.felhasznalo_id;
+  const palyaId = Number(req.params.palyaId);
+  const { elvegzett } = req.body;
+
+  if (!Number.isFinite(palyaId)) return res.status(400).json({ message: "Hibás palyaId." });
+  if (typeof elvegzett !== "boolean") {
+    return res.status(400).json({ message: "Az elvegzett mező boolean típusú kell legyen." });
+  }
+
+  try {
+    const up = await pool.query(
+      `
+      UPDATE palya_tartozkodas
+      SET elvegzett = $3
+      WHERE palya_id = $1 AND felhasznalo_id = $2
+      `,
+      [palyaId, userId, elvegzett]
+    );
+
+    if (up.rowCount === 0) {
+      return res.status(404).json({ message: "Foglalás nem található / nem a tiéd." });
+    }
+
+    res.json({ message: "Pályahasználat státusz frissítve.", elvegzett });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Pályahasználat státusz frissítési hiba." });
   }
 });
 
@@ -405,11 +440,11 @@ router.post("/teendo", requireAuth, async (req, res) => {
   try {
     const ins = await pool.query(
       `
-      INSERT INTO teendo (leiras, statusz, kezdeti_ido, hatarido, felhasznalo_id, tipus, lo_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO teendo (leiras, statusz, kezdeti_ido, hatarido, felhasznalo_id, tipus, lo_id, elvegzett)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING teendo_id
       `,
-      [leiras, "tervezett", startDt, endDt, userId, t, horseId]
+      [leiras, "tervezett", startDt, endDt, userId, t, horseId, false]
     );
 
     res.status(201).json({ message: "Teendő létrehozva.", teendo_id: ins.rows[0].teendo_id });
@@ -466,6 +501,37 @@ router.put("/teendo/:id", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Teendő módosítási hiba." });
+  }
+});
+
+router.patch("/teendo/:id/elvegzett", requireAuth, async (req, res) => {
+  const userId = req.user.felhasznalo_id;
+  const id = Number(req.params.id);
+  const { elvegzett } = req.body;
+
+  if (!Number.isFinite(id)) return res.status(400).json({ message: "Hibás id." });
+  if (typeof elvegzett !== "boolean") {
+    return res.status(400).json({ message: "Az elvegzett mező boolean típusú kell legyen." });
+  }
+
+  try {
+    const up = await pool.query(
+      `
+      UPDATE teendo
+      SET elvegzett = $3
+      WHERE teendo_id = $1 AND felhasznalo_id = $2
+      `,
+      [id, userId, elvegzett]
+    );
+
+    if (up.rowCount === 0) {
+      return res.status(404).json({ message: "Teendő nem található / nem a tiéd." });
+    }
+
+    res.json({ message: "Teendő státusz frissítve.", elvegzett });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Teendő státusz frissítési hiba." });
   }
 });
 
