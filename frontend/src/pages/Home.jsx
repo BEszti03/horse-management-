@@ -115,6 +115,18 @@ function sortTodosCompletedLast(items) {
   });
 }
 
+function canMarkTodoComplete(todo) {
+  if (todo?.completed) return true;
+
+  const candidateTime = todo?.end || todo?.start;
+  if (!candidateTime) return false;
+
+  const dueDate = new Date(candidateTime);
+  if (Number.isNaN(dueDate.getTime())) return false;
+
+  return Date.now() >= dueDate.getTime();
+}
+
 function Home() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [weeklyTodos, setWeeklyTodos] = useState([]);
@@ -195,6 +207,7 @@ function Home() {
               taskCategory: p.category,
               label: `${tipus} - ${horseOrDesc}`,
               start: ev.start,
+              end: ev.end,
               completed: !!p.elvegzett,
               dateLabel: hasValidStart
                 ? `${formatDateHu(startDate)}${hasSpecificTime ? ` ${formatTimeHu(startDate)}` : ""}`
@@ -408,6 +421,11 @@ function Home() {
   }
 
   async function toggleTodoComplete(todo) {
+    if (!todo?.completed && !canMarkTodoComplete(todo)) {
+      alert("Ezt a teendőt csak az időtartam lejárta után lehet készre jelölni.");
+      return;
+    }
+
     const isPalya = todo?.taskCategory === "palya";
     const entityId = isPalya ? Number(todo?.palyaId) : Number(todo?.teendoId);
     if (!Number.isFinite(entityId)) return;
@@ -522,23 +540,32 @@ function Home() {
                       <p className="homeMuted">Ezen a héten nincs pályahasználati feladat.</p>
                     ) : (
                       <ul className="homeList">
-                        {ridingTasks.map((t) => (
-                          <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
-                            <input
-                              type="checkbox"
-                              className="homeCheckbox"
-                              id={`task-${t.id}`}
-                              checked={!!t.completed}
-                              onChange={() => toggleTodoComplete(t)}
-                            />
-                            <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
-                              <div>
-                                <span className="homeItemText">{t.label}</span>
-                                {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
-                              </div>
-                            </label>
-                          </li>
-                        ))}
+                        {ridingTasks.map((t) => {
+                          const completionLocked = !t.completed && !canMarkTodoComplete(t);
+                          return (
+                            <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
+                              <input
+                                type="checkbox"
+                                className="homeCheckbox"
+                                id={`task-${t.id}`}
+                                checked={!!t.completed}
+                                disabled={completionLocked}
+                                title={
+                                  completionLocked
+                                    ? "Csak az esemény lezárulta után jelölhető készre."
+                                    : ""
+                                }
+                                onChange={() => toggleTodoComplete(t)}
+                              />
+                              <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
+                                <div>
+                                  <span className="homeItemText">{t.label}</span>
+                                  {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
+                                </div>
+                              </label>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>
@@ -549,23 +576,32 @@ function Home() {
                       <p className="homeMuted">Ezen a héten nincs egyéb teendő.</p>
                     ) : (
                       <ul className="homeList">
-                        {otherTodoTasks.map((t) => (
-                          <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
-                            <input
-                              type="checkbox"
-                              className="homeCheckbox"
-                              id={`task-${t.id}`}
-                              checked={!!t.completed}
-                              onChange={() => toggleTodoComplete(t)}
-                            />
-                            <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
-                              <div>
-                                <span className="homeItemText">{t.label}</span>
-                                {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
-                              </div>
-                            </label>
-                          </li>
-                        ))}
+                        {otherTodoTasks.map((t) => {
+                          const completionLocked = !t.completed && !canMarkTodoComplete(t);
+                          return (
+                            <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
+                              <input
+                                type="checkbox"
+                                className="homeCheckbox"
+                                id={`task-${t.id}`}
+                                checked={!!t.completed}
+                                disabled={completionLocked}
+                                title={
+                                  completionLocked
+                                    ? "Csak az esemény lezárulta után jelölhető készre."
+                                    : ""
+                                }
+                                onChange={() => toggleTodoComplete(t)}
+                              />
+                              <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
+                                <div>
+                                  <span className="homeItemText">{t.label}</span>
+                                  {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
+                                </div>
+                              </label>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>
