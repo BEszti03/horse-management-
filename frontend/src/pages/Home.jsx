@@ -138,6 +138,7 @@ function Home() {
 
   const role = user?.szerepkor;
   const myStableId = user?.lovarda_id;
+  const currentUserId = Number(user?.felhasznalo_id);
   const ridingTasks = useMemo(
     () => sortTodosCompletedLast(weeklyTodos.filter((item) => item.taskCategory === "palya")),
     [weeklyTodos]
@@ -174,7 +175,10 @@ function Home() {
         const todos = (Array.isArray(data) ? data : [])
           .filter((ev) => {
             const category = ev?.extendedProps?.category;
-            return category === "teendo" || category === "palya";
+            const ownerId = Number(ev?.extendedProps?.felhasznalo_id);
+            const isOwnedByCurrentUser =
+              Number.isFinite(ownerId) && Number.isFinite(currentUserId) && ownerId === currentUserId;
+            return (category === "teendo" || category === "palya") && isOwnedByCurrentUser;
           })
           .map((ev) => {
             const p = ev.extendedProps || {};
@@ -205,7 +209,7 @@ function Home() {
     }
 
     loadWeeklyTodos();
-  }, [token]);
+  }, [token, currentUserId]);
 
   /* =========================
      VERSENYEK – COMPETITIONS
@@ -314,6 +318,11 @@ function Home() {
             const startValue = ev?.start;
             if (!startValue) return;
 
+            const ownerId = Number(ev?.extendedProps?.felhasznalo_id);
+            const isOwnedByCurrentUser =
+              Number.isFinite(ownerId) && Number.isFinite(currentUserId) && ownerId === currentUserId;
+            if (!isOwnedByCurrentUser) return;
+
             const startDate = new Date(startValue);
             if (Number.isNaN(startDate.getTime())) return;
 
@@ -356,7 +365,7 @@ function Home() {
     }
 
     loadMiniCalendarEventDays();
-  }, [token, role, myStableId, previewMonth]);
+  }, [token, role, myStableId, previewMonth, currentUserId]);
 
   const competitionsTitle =
     role === "lovarda_vezeto"
