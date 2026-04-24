@@ -1,88 +1,146 @@
 .menu {
   position: relative;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  --menu-text: #f8f1e7;
+  --menu-accent: #edd8b4;
+  --menu-accent-strong: #c89b4f;
+  --menu-panel: rgba(255, 252, 246, 0.97);
+  --menu-border: rgba(200, 155, 79, 0.26);
 }
 
 .menu__inline {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(20, 12, 6, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .menu__inline .menu__item {
-  display: inline-block;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: #f6efe4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--menu-text);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .menu__inline .menu__item:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.menu__inline .menu__item--active {
+  color: #3f2a0f;
+  background: linear-gradient(135deg, var(--menu-accent), #fff2d9);
+  box-shadow: 0 6px 16px rgba(237, 216, 180, 0.35);
 }
 
 .menu__inline .menu__logout {
   display: inline-flex;
   align-items: center;
   width: auto;
-  margin-left: 34px;
+  margin-left: 12px;
   margin-top: 0;
-  padding: 8px 10px;
+  padding: 8px 14px;
   line-height: 1.2;
-  background: transparent;
-  border: none;
-  color: #ffd6d6;
+  background: rgba(141, 35, 25, 0.18);
+  border: 1px solid rgba(255, 218, 215, 0.22);
+  color: #ffe6e2;
   cursor: pointer;
+}
+
+.menu__inline .menu__logout:hover {
+  background: rgba(141, 35, 25, 0.3);
 }
 
 .menu__button {
   display: none;
+  min-height: 40px;
   padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  background: rgb(173, 160, 142);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  background: linear-gradient(145deg, rgba(255, 247, 230, 0.94), rgba(243, 220, 172, 0.9));
+  color: #4b3314;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(17, 10, 3, 0.28);
 }
 
 .menu__dropdown {
   display: none;
   position: absolute;
-  top: 44px;
+  top: 52px;
   right: 0;
-  width: 190px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  width: min(88vw, 260px);
+  background: var(--menu-panel);
+  border: 1px solid var(--menu-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 48px rgba(31, 19, 8, 0.22);
+  backdrop-filter: blur(10px);
   overflow: hidden;
   z-index: 1000;
+  transform-origin: top right;
+  animation: menuDrop 0.2s ease-out;
 }
 
 .menu__item {
   display: block;
-  padding: 10px 12px;
-  font-size: 18px;
+  padding: 12px 14px;
+  font-size: 16px;
+  font-weight: 600;
   text-decoration: none;
-  color: #111;
+  color: #2f2419;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .menu__item:hover {
-  background: #f4f4f4;
+  background: #f6ead2;
+}
+
+.menu__dropdown .menu__item--active {
+  background: #f3dfbc;
+  color: #4b3212;
 }
 
 .menu__logout {
   width: 100%;
   text-align: left;
-  background: white;
+  background: #fff;
   border: none;
-  margin-top: 10px;
-  padding: 10px 12px;
+  margin-top: 6px;
+  padding: 12px 14px;
   cursor: pointer;
-  color: #b00020;
+  color: #992018;
 }
 
 .menu__logout:hover {
-  background: #fdecea;
+  background: #fee9e5;
+}
+
+@keyframes menuDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 768px) {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./Menu.css";
 
 function Menu() {
@@ -44,33 +44,37 @@ function Menu() {
     };
   }, []);
 
+  function getMenuItemClassName({ isActive }) {
+    return isActive ? "menu__item menu__item--active" : "menu__item";
+  }
+
   function renderMenuItems(onItemClick) {
     return (
       <>
-        <Link className="menu__item" to="/profile" onClick={onItemClick}>
+        <NavLink className={getMenuItemClassName} to="/profile" onClick={onItemClick}>
           Felhasználó adatok
-        </Link>
+        </NavLink>
 
-        <Link className="menu__item" to="/horses" onClick={onItemClick}>
+        <NavLink className={getMenuItemClassName} to="/horses" onClick={onItemClick}>
           Ló adatok
-        </Link>
+        </NavLink>
 
-        <Link className="menu__item" to="/notes" onClick={onItemClick}>
+        <NavLink className={getMenuItemClassName} to="/notes" onClick={onItemClick}>
           Jegyzetek
-        </Link>
+        </NavLink>
 
-        <Link className="menu__item" to="/calendar" onClick={onItemClick}>
+        <NavLink className={getMenuItemClassName} to="/calendar" onClick={onItemClick}>
           Naptár
-        </Link>
+        </NavLink>
 
-        <Link className="menu__item" to="/competitions" onClick={onItemClick}>
+        <NavLink className={getMenuItemClassName} to="/competitions" onClick={onItemClick}>
           Versenyek
-        </Link>
+        </NavLink>
 
         {isAdmin && (
-          <Link className="menu__item" to="/admin" onClick={onItemClick}>
+          <NavLink className={getMenuItemClassName} to="/admin" onClick={onItemClick}>
             Admin felület
-          </Link>
+          </NavLink>
         )}
 
         <button type="button" className="menu__item menu__logout" onClick={handleLogout}>
@@ -86,7 +90,13 @@ function Menu() {
         {renderMenuItems()}
       </nav>
 
-      <button className="menu__button" onClick={() => setOpen((v) => !v)}>
+      <button
+        className="menu__button"
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label="Menü megnyitása"
+      >
         Menü
       </button>
 
