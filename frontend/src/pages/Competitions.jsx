@@ -395,9 +395,6 @@ function Competitions() {
       <main className="competitionsMain">
         <div className="competitionsHeader">
           <h1 className="competitionsTitle">Versenyek</h1>
-          <p className="competitionsSubtitle">
-            Nézd át a saját jelentkezéseidet, vagy kezeld a rendezett versenyeidet és a jelentkezőket.
-          </p>
         </div>
 
         {error && <div className="competitionsAlert competitionsAlertError">{error}</div>}
@@ -649,9 +646,6 @@ function Competitions() {
               <div className="competitionsCardHeader">
                 <div>
                   <h2 className="competitionsCardTitle">Verseny részletei</h2>
-                  <p className="competitionsCardHint">
-                    Az információk itt jelennek meg, miután rákattintasz egy versenyre.
-                  </p>
                 </div>
               </div>
 
@@ -666,7 +660,6 @@ function Competitions() {
                 <>
                   <div className="competitionDetailHero">
                     <div>
-                      <p className="competitionListItem__label">Kiválasztott verseny</p>
                       <h3 className="competitionDetailTitle">{selectedCompetitionInfo.nev}</h3>
                     </div>
 
