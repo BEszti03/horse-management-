@@ -127,10 +127,32 @@ function canMarkTodoComplete(todo) {
   return Date.now() >= dueDate.getTime();
 }
 
+function getRolePriority(role) {
+  if (role === "admin") return 0;
+  if (role === "lovarda_vezeto") return 1;
+  if (role === "lovas") return 2;
+  return 3;
+}
+
+function getMemberInitials(name) {
+  const clean = String(name || "").trim();
+  if (!clean) return "?";
+
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase();
+}
+
 function Home() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(true);
   const [weeklyTodos, setWeeklyTodos] = useState([]);
   const [weeklyCompetitions, setWeeklyCompetitions] = useState([]);
+  const [stableMembers, setStableMembers] = useState([]);
+  const [stableName, setStableName] = useState("");
   const [miniCalendarEventDays, setMiniCalendarEventDays] = useState({});
   const [previewMonth, setPreviewMonth] = useState(() => {
     const now = new Date();
@@ -159,10 +181,46 @@ function Home() {
     () => sortTodosCompletedLast(weeklyTodos.filter((item) => item.taskCategory === "teendo")),
     [weeklyTodos]
   );
+  const orderedStableMembers = useMemo(
+    () =>
+      [...stableMembers].sort((a, b) => {
+        const roleDiff = getRolePriority(a?.szerepkor) - getRolePriority(b?.szerepkor);
+        if (roleDiff !== 0) return roleDiff;
+        return String(a?.nev || "").localeCompare(String(b?.nev || ""), "hu");
+      }),
+    [stableMembers]
+  );
 
   /* =========================
      TEENDŐK – CALENDAR
   ========================= */
+  useEffect(() => {
+    async function loadStableMembers() {
+      try {
+        if (!token) return;
+
+        const res = await fetch("/api/users/stable-members", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setStableMembers([]);
+          setStableName("");
+          return;
+        }
+
+        setStableMembers(Array.isArray(data?.members) ? data.members : []);
+        setStableName(data?.stableName || "");
+      } catch {
+        setStableMembers([]);
+        setStableName("");
+      }
+    }
+
+    loadStableMembers();
+  }, [token]);
+
   useEffect(() => {
     async function loadWeeklyTodos() {
       try {
@@ -516,123 +574,179 @@ function Home() {
         </div>
 
         <section className="homeGrid">
-          <div className="homeCard">
-            <div className="homeCardHeader">
-              <h2 className="homeCardTitle">Közelgő események a héten</h2>
-              <p className="homeCardHint">
-                Csak az aktuális hét (hétfő–vasárnap) eseményei.
-              </p>
-            </div>
+          <aside className="homeLeftSide">
+            <section className="homeMembersPanel">
+              <button
+                type="button"
+                className="homeMembersToggle"
+                onClick={() => setIsMembersOpen((prev) => !prev)}
+                aria-expanded={isMembersOpen}
+              >
+                <span className="homeMembersToggleTitle">Lovarda tagjai</span>
+                <span className={`homeMembersChevron ${isMembersOpen ? "is-open" : ""}`} aria-hidden="true">
+                  ▾
+                </span>
+              </button>
 
-            <div className="homeSection">
-              <h3 className="homeSectionTitle">
-                <img src="/to-do.png" alt="Teendők" className="homeSectionIcon" />
-                Teendők
-              </h3>
+              {isMembersOpen && (
+                <div className="homeMembersPanelBody">
+                  {stableName && <p className="homeCardHint">{stableName}</p>}
 
-              {weeklyTodos.length === 0 ? (
-                <p className="homeMuted">Nincs teendőd erre a hétre.</p>
-              ) : (
-                <>
-                  <div className="homeSubSection">
-                    <h4 className="homeSubSectionTitle">Lovaglás</h4>
-                    {ridingTasks.length === 0 ? (
-                      <p className="homeMuted">Ezen a héten nincs pályahasználati feladat.</p>
-                    ) : (
-                      <ul className="homeList">
-                        {ridingTasks.map((t) => {
-                          const completionLocked = !t.completed && !canMarkTodoComplete(t);
-                          return (
-                            <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
-                              <input
-                                type="checkbox"
-                                className="homeCheckbox"
-                                id={`task-${t.id}`}
-                                checked={!!t.completed}
-                                disabled={completionLocked}
-                                title={
-                                  completionLocked
-                                    ? "Csak az esemény lezárulta után jelölhető készre."
-                                    : ""
-                                }
-                                onChange={() => toggleTodoComplete(t)}
-                              />
-                              <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
-                                <div>
-                                  <span className="homeItemText">{t.label}</span>
-                                  {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
-                                </div>
-                              </label>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
+                  {orderedStableMembers.length === 0 ? (
+                    <p className="homeMuted">Még nincs megjeleníthető taglista ehhez a lovardához.</p>
+                  ) : (
+                    <ul className="homeMembersList">
+                      {orderedStableMembers.map((member) => {
+                        const isLeader =
+                          member?.szerepkor === "admin" || member?.szerepkor === "lovarda_vezeto";
+                        return (
+                          <li
+                            key={member.felhasznalo_id}
+                            className={`homeMemberItem ${isLeader ? "is-leader" : ""}`}
+                          >
+                            <div className="homeMemberAvatar" aria-hidden="true">
+                              {member?.profilkep_url ? (
+                                <img src={member.profilkep_url} alt="" />
+                              ) : (
+                                <span>{getMemberInitials(member?.nev)}</span>
+                              )}
+                            </div>
 
-                  <div className="homeSubSection">
-                    <h4 className="homeSubSectionTitle">Egyéb teendők</h4>
-                    {otherTodoTasks.length === 0 ? (
-                      <p className="homeMuted">Ezen a héten nincs egyéb teendő.</p>
-                    ) : (
-                      <ul className="homeList">
-                        {otherTodoTasks.map((t) => {
-                          const completionLocked = !t.completed && !canMarkTodoComplete(t);
-                          return (
-                            <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
-                              <input
-                                type="checkbox"
-                                className="homeCheckbox"
-                                id={`task-${t.id}`}
-                                checked={!!t.completed}
-                                disabled={completionLocked}
-                                title={
-                                  completionLocked
-                                    ? "Csak az esemény lezárulta után jelölhető készre."
-                                    : ""
-                                }
-                                onChange={() => toggleTodoComplete(t)}
-                              />
-                              <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
-                                <div>
-                                  <span className="homeItemText">{t.label}</span>
-                                  {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
-                                </div>
-                              </label>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                </>
+                            <div className="homeMemberContent">
+                              <div className="homeMemberTopLine">
+                                <p className="homeMemberName">{member?.nev || "Ismeretlen tag"}</p>
+                                {isLeader && <span className="homeLeaderBadge">Az élen</span>}
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
               )}
-            </div>
+            </section>
+          </aside>
 
-            <div className="homeDivider" />
-
-            <div className="homeSection">
-              <h3 className="homeSectionTitle">
-                <img src="/competitions.png" alt="Versenyek" className="homeSectionIcon" />
-                {competitionsTitle}
-              </h3>
-
-              {weeklyCompetitions.length === 0 ? (
-                <p className="homeMuted">
-                  {role === "lovarda_vezeto"
-                    ? "Nincs saját versenyd ezen a héten."
-                    : "Nem jelentkeztél eheti versenyre."}
+          <div className="homeMainColumn">
+            <div className="homeCard">
+              <div className="homeCardHeader">
+                <h2 className="homeCardTitle">Közelgő események a héten</h2>
+                <p className="homeCardHint">
+                  Csak az aktuális hét (hétfő–vasárnap) eseményei.
                 </p>
-              ) : (
-                <ul className="homeList">
-                  {weeklyCompetitions.map((c) => (
-                    <li className="homeListItem" key={c.id}>
-                      <span className="homeBullet" aria-hidden="true" />
-                      <span className="homeItemText">{c.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              </div>
+
+              <div className="homeSection">
+                <h3 className="homeSectionTitle">
+                  <img src="/to-do.png" alt="Teendők" className="homeSectionIcon" />
+                  Teendők
+                </h3>
+
+                {weeklyTodos.length === 0 ? (
+                  <p className="homeMuted">Nincs teendőd erre a hétre.</p>
+                ) : (
+                  <>
+                    <div className="homeSubSection">
+                      <h4 className="homeSubSectionTitle">Lovaglás</h4>
+                      {ridingTasks.length === 0 ? (
+                        <p className="homeMuted">Ezen a héten nincs pályahasználati feladat.</p>
+                      ) : (
+                        <ul className="homeList">
+                          {ridingTasks.map((t) => {
+                            const completionLocked = !t.completed && !canMarkTodoComplete(t);
+                            return (
+                              <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
+                                <input
+                                  type="checkbox"
+                                  className="homeCheckbox"
+                                  id={`task-${t.id}`}
+                                  checked={!!t.completed}
+                                  disabled={completionLocked}
+                                  title={
+                                    completionLocked
+                                      ? "Csak az esemény lezárulta után jelölhető készre."
+                                      : ""
+                                  }
+                                  onChange={() => toggleTodoComplete(t)}
+                                />
+                                <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
+                                  <div>
+                                    <span className="homeItemText">{t.label}</span>
+                                    {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
+                                  </div>
+                                </label>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+
+                    <div className="homeSubSection">
+                      <h4 className="homeSubSectionTitle">Egyéb teendők</h4>
+                      {otherTodoTasks.length === 0 ? (
+                        <p className="homeMuted">Ezen a héten nincs egyéb teendő.</p>
+                      ) : (
+                        <ul className="homeList">
+                          {otherTodoTasks.map((t) => {
+                            const completionLocked = !t.completed && !canMarkTodoComplete(t);
+                            return (
+                              <li className={`homeListItem ${t.completed ? "is-completed" : ""}`} key={t.id}>
+                                <input
+                                  type="checkbox"
+                                  className="homeCheckbox"
+                                  id={`task-${t.id}`}
+                                  checked={!!t.completed}
+                                  disabled={completionLocked}
+                                  title={
+                                    completionLocked
+                                      ? "Csak az esemény lezárulta után jelölhető készre."
+                                      : ""
+                                  }
+                                  onChange={() => toggleTodoComplete(t)}
+                                />
+                                <label htmlFor={`task-${t.id}`} className="homeCheckboxLabel">
+                                  <div>
+                                    <span className="homeItemText">{t.label}</span>
+                                    {t.dateLabel && <span className="homeItemMeta">{t.dateLabel}</span>}
+                                  </div>
+                                </label>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="homeDivider" />
+
+              <div className="homeSection">
+                <h3 className="homeSectionTitle">
+                  <img src="/competitions.png" alt="Versenyek" className="homeSectionIcon" />
+                  {competitionsTitle}
+                </h3>
+
+                {weeklyCompetitions.length === 0 ? (
+                  <p className="homeMuted">
+                    {role === "lovarda_vezeto"
+                      ? "Nincs saját versenyd ezen a héten."
+                      : "Nem jelentkeztél eheti versenyre."}
+                  </p>
+                ) : (
+                  <ul className="homeList">
+                    {weeklyCompetitions.map((c) => (
+                      <li className="homeListItem" key={c.id}>
+                        <span className="homeBullet" aria-hidden="true" />
+                        <span className="homeItemText">{c.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
 

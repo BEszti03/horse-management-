@@ -306,4 +306,96 @@ router.delete("/me", requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/users/stable-members
+router.get("/stable-members", requireAuth, async (req, res) => {
+  try {
+    const requesterId = req.user.felhasznalo_id;
+    const requesterRole = req.user.szerepkor;
+
+    const requesterQ = await pool.query(
+      `SELECT lovarda_id
+       FROM felhasznalo
+       WHERE felhasznalo_id = $1`,
+      [requesterId]
+    );
+
+    if (!requesterQ.rows.length) {
+      return res.status(404).json({ message: "Felhasználó nem található." });
+    }
+
+    const requesterStableId = requesterQ.rows[0].lovarda_id;
+
+    // Adminoknál, ha nincs megadott lovarda, listázzuk az összes felhasználót.
+    if (requesterRole === "admin" && (requesterStableId === null || typeof requesterStableId === "undefined")) {
+      const allUsersQ = await pool.query(
+        `SELECT
+           f.felhasznalo_id,
+           f.nev,
+           f.szerepkor,
+           f.profilkep_url,
+           f.lovarda_id,
+           l.nev AS lovarda_nev
+         FROM felhasznalo f
+         LEFT JOIN lovarda l ON l.lovarda_id = f.lovarda_id
+         ORDER BY
+           CASE f.szerepkor
+             WHEN 'admin' THEN 0
+             WHEN 'lovarda_vezeto' THEN 1
+             WHEN 'lovas' THEN 2
+             ELSE 3
+           END,
+           lower(f.nev) ASC`
+      );
+
+      return res.json({
+        stableName: "Összes lovarda",
+        members: allUsersQ.rows,
+      });
+    }
+
+    if (requesterStableId === null || typeof requesterStableId === "undefined") {
+      return res.json({ stableName: null, members: [] });
+    }
+
+    const stableQ = await pool.query(
+      `SELECT nev
+       FROM lovarda
+       WHERE lovarda_id = $1`,
+      [requesterStableId]
+    );
+
+    const stableName = stableQ.rows[0]?.nev || null;
+
+    const membersQ = await pool.query(
+      `SELECT
+         f.felhasznalo_id,
+         f.nev,
+         f.szerepkor,
+         f.profilkep_url,
+         f.lovarda_id,
+         l.nev AS lovarda_nev
+       FROM felhasznalo f
+       LEFT JOIN lovarda l ON l.lovarda_id = f.lovarda_id
+       WHERE f.lovarda_id = $1
+       ORDER BY
+         CASE f.szerepkor
+           WHEN 'admin' THEN 0
+           WHEN 'lovarda_vezeto' THEN 1
+           WHEN 'lovas' THEN 2
+           ELSE 3
+         END,
+         lower(f.nev) ASC`,
+      [requesterStableId]
+    );
+
+    return res.json({
+      stableName,
+      members: membersQ.rows,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Szerver hiba.", error: err.message });
+  }
+});
+
 module.exports = router;
