@@ -557,47 +557,51 @@ function Competitions() {
                             {activeSection === "joined" ? (
                               <span className="competitionChip competitionChip--accent">Jelentkezve</span>
                             ) : activeSection === "all" && competition?.jelentkezett ? (
-                              <span className="competitionChip competitionChip--accent">Már jelentkeztél</span>
+                              <span className="competitionChip competitionChip--accent">Jelentkeztél</span>
                             ) : null}
                           </div>
 
                           {activeSection === "all" && competitionIsFuture && !competition?.jelentkezett && (
                             <div className="competitionListItem__actions">
-                              <label
-                                className="competitionInlineField"
-                                onClick={(event) => event.stopPropagation()}
-                              >
-                                <span>Ló (opcionális)</span>
-                                <select
-                                  value={horseSelectionByCompetition[String(competition.verseny_id)] || ""}
+                              <div className="competitionListItem__actionsLeft">
+                                <label
+                                  className="competitionInlineField"
                                   onClick={(event) => event.stopPropagation()}
-                                  onChange={(event) =>
-                                    handleHorseSelectionChange(
-                                      competition.verseny_id,
-                                      event.target.value
-                                    )
-                                  }
                                 >
-                                  <option value="">— nincs kiválasztva —</option>
-                                  {horses.map((horse) => (
-                                    <option key={horse.lo_id} value={String(horse.lo_id)}>
-                                      {horse.nev}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
+                                  <span>Ló (opcionális)</span>
+                                  <select
+                                    value={horseSelectionByCompetition[String(competition.verseny_id)] || ""}
+                                    onClick={(event) => event.stopPropagation()}
+                                    onChange={(event) =>
+                                      handleHorseSelectionChange(
+                                        competition.verseny_id,
+                                        event.target.value
+                                      )
+                                    }
+                                  >
+                                    <option value="">— nincs kiválasztva —</option>
+                                    {horses.map((horse) => (
+                                      <option key={horse.lo_id} value={String(horse.lo_id)}>
+                                        {horse.nev}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              </div>
 
-                              <button
-                                type="button"
-                                className="competitionPrimaryBtn"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  signupForCompetition(competition);
-                                }}
-                                disabled={actionLoadingId === competition.verseny_id}
-                              >
-                                {actionLoadingId === competition.verseny_id ? "Jelentkezés..." : "Jelentkezés"}
-                              </button>
+                              <div className="competitionListItem__actionsRight">
+                                <button
+                                  type="button"
+                                  className="competitionPrimaryBtn"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    signupForCompetition(competition);
+                                  }}
+                                  disabled={actionLoadingId === competition.verseny_id}
+                                >
+                                  {actionLoadingId === competition.verseny_id ? "Jelentkezés..." : "Jelentkezés"}
+                                </button>
+                              </div>
                             </div>
                           )}
 
@@ -729,8 +733,8 @@ function Competitions() {
                   </div>
 
                   <div className="competitionDetailActions">
-                    {activeSection === "all" && selectedIsFuture && !selectedCompetitionInfo.jelentkezett && (
-                      <>
+                    <div className="competitionDetailActions__left">
+                      {activeSection === "all" && selectedIsFuture && !selectedCompetitionInfo.jelentkezett && (
                         <label className="competitionInlineField">
                           <span>Ló (opcionális)</span>
                           <select
@@ -751,7 +755,11 @@ function Competitions() {
                             ))}
                           </select>
                         </label>
+                      )}
+                    </div>
 
+                    <div className="competitionDetailActions__right">
+                      {activeSection === "all" && selectedIsFuture && !selectedCompetitionInfo.jelentkezett && (
                         <button
                           type="button"
                           className="competitionPrimaryBtn"
@@ -762,32 +770,32 @@ function Competitions() {
                             ? "Jelentkezés..."
                             : "Jelentkezés erre a versenyre"}
                         </button>
-                      </>
-                    )}
+                      )}
 
-                    {activeSection === "joined" && selectedIsFuture && selectedCompetitionInfo.jelentkezett && (
-                      <button
-                        type="button"
-                        className="competitionGhostBtn"
-                        onClick={() => withdrawFromCompetition(selectedCompetitionInfo)}
-                        disabled={actionLoadingId === selectedCompetitionInfo.verseny_id}
-                      >
-                        {actionLoadingId === selectedCompetitionInfo.verseny_id
-                          ? "Lejelentkezés..."
-                          : "Lejelentkezés"}
-                      </button>
-                    )}
+                      {activeSection === "joined" && selectedIsFuture && selectedCompetitionInfo.jelentkezett && (
+                        <button
+                          type="button"
+                          className="competitionGhostBtn"
+                          onClick={() => withdrawFromCompetition(selectedCompetitionInfo)}
+                          disabled={actionLoadingId === selectedCompetitionInfo.verseny_id}
+                        >
+                          {actionLoadingId === selectedCompetitionInfo.verseny_id
+                            ? "Lejelentkezés..."
+                            : "Lejelentkezés"}
+                        </button>
+                      )}
 
-                    {activeSection === "managed" && canDeleteCompetition(selectedCompetitionInfo) && (
-                      <button
-                        type="button"
-                        className="competitionDangerBtn"
-                        onClick={() => handleDeleteCompetition(selectedCompetitionInfo)}
-                        disabled={deletingId === selectedCompetitionInfo.verseny_id}
-                      >
-                        {deletingId === selectedCompetitionInfo.verseny_id ? "Törlés..." : "Verseny törlése"}
-                      </button>
-                    )}
+                      {activeSection === "managed" && canDeleteCompetition(selectedCompetitionInfo) && (
+                        <button
+                          type="button"
+                          className="competitionDangerBtn"
+                          onClick={() => handleDeleteCompetition(selectedCompetitionInfo)}
+                          disabled={deletingId === selectedCompetitionInfo.verseny_id}
+                        >
+                          {deletingId === selectedCompetitionInfo.verseny_id ? "Törlés..." : "Verseny törlése"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </>
               ) : null}
