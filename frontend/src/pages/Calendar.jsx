@@ -102,6 +102,15 @@ function getOccupancyText(category, props, fallbackTitle) {
   return fallbackTitle || "Elfoglaltság";
 }
 
+function labelTipus(tipus) {
+  const x = String(tipus || "egyeb").toLowerCase();
+  if (x === "patkolas") return "Patkolás";
+  if (x === "allatorvos") return "Állatorvos";
+  if (x === "verseny") return "Verseny";
+  if (x === "palya") return "Pálya";
+  return "Egyéb";
+}
+
 function renderEventContent(eventInfo) {
   return (
     <div className="calendarEventContent">
@@ -157,6 +166,19 @@ function Calendar() {
   const [competitionHorseId, setCompetitionHorseId] = useState("");
   const [competitionStableId, setCompetitionStableId] = useState("");
 
+  // Nézet módja: 'calendar' | 'list'
+  const [viewMode, setViewMode] = useState("calendar");
+  const [listQHorse, setListQHorse] = useState("");
+  const [listQType, setListQType] = useState("");
+  const [listQDesc, setListQDesc] = useState("");
+  const [listQYear, setListQYear] = useState("");
+  const [listQMonth, setListQMonth] = useState("");
+  const [listEvents, setListEvents] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [listLoading, setListLoading] = useState(false);
+  const [listError, setListError] = useState(null);
+  const [listPage, setListPage] = useState(1);
+
   useEffect(() => {
     async function loadHorses() {
       try {
@@ -188,7 +210,7 @@ function Calendar() {
     if (token) loadStables();
   }, [token, user?.szerepkor]);
 
-  //Naptár események betöltése + versenyek beolvasztása
+  //Naptár események betöltése + versenyek 
   async function fetchEvents(info, successCallback, failureCallback) {
     try {
       const from = info.startStr.slice(0, 10);
@@ -243,7 +265,7 @@ function Calendar() {
           },
         }));
       } catch {
-        // ignore
+        // hiba figyelmen kívül hagyva
       }
 
       successCallback([...normalized, ...competitions]);
@@ -303,7 +325,7 @@ function Calendar() {
       return;
     }
 
-    // Pálya/teendő edit
+    // Pálya/teendő szerkesztése
     if (p.category !== "palya" && p.category !== "teendo") return;
 
     const ownerId = Number(p.felhasznalo_id);
@@ -605,7 +627,7 @@ function Calendar() {
         return;
       }
 
-      // Pálya edit
+      // Pálya szerkesztés
       if (current.category === "palya") {
         const res = await fetch(`/api/calendar/palya-booking/${current.palya_id}`, {
           method: "PUT",
@@ -636,7 +658,7 @@ function Calendar() {
         return;
       }
 
-      // Teendő edit
+      // Teendő szerkesztés
       const t = (title || "").trim();
       if (!t) {
         alert("Adj meg címet (leírás) a teendőnek.");
@@ -672,7 +694,7 @@ function Calendar() {
     }
   }
 
-  // Delete (pálya/teendő)
+  // Törlés (pálya/teendő)
   async function deleteCurrent() {
     if (!current) return;
 
@@ -829,13 +851,136 @@ function Calendar() {
     day: "Nap",
   };
 
+  // A felhasználó eseményeinek betöltése lista nézethez
+  useEffect(() => {
+    async function loadList() {
+      setListLoading(true);
+      setListError(null);
+      try {
+        const from = new Date();
+        from.setFullYear(from.getFullYear() - 1);
+        const to = new Date();
+        to.setFullYear(to.getFullYear() + 1);
+
+        const data = await apiFetch(
+          `/api/calendar?from=${from.toISOString().slice(0, 10)}&to=${to.toISOString().slice(0, 10)}`
+        );
+
+        const list = Array.isArray(data) ? data : [];
+        const mine = list.filter((ev) => {
+          const p = ev.extendedProps || {};
+          const ownerId = Number(p.felhasznalo_id);
+          return Number.isFinite(ownerId) && ownerId === currentUserId;
+        });
+
+        setListEvents(mine);
+
+        // Évek kigyűjtése
+        const yearsSet = new Set();
+        mine.forEach((ev) => {
+          if (ev.start) {
+            const year = new Date(ev.start).getFullYear().toString();
+            yearsSet.add(year);
+          }
+        });
+        const sortedYears = Array.from(yearsSet).sort();
+        setAvailableYears(sortedYears);
+      } catch (err) {
+        setListError(err.message || String(err));
+      } finally {
+        setListLoading(false);
+      }
+    }
+
+    if (viewMode === "list" && currentUserId) loadList();
+  }, [viewMode, currentUserId]);
+
+  useEffect(() => {
+    setListPage(1);
+  }, [listQHorse, listQType, listQYear, listQMonth, listQDesc]);
+
+  const listItemsPerPage = 20;
+  const filteredListEvents = listEvents.filter((ev) => {
+    const p = ev.extendedProps || {};
+    const horse = p.lo_nev || "";
+    const type = (p.type || p.tipus || p.category || "").toLowerCase();
+    const desc = (p.raw_leiras || "").toLowerCase();
+    const eventDateStr = ev.start ? new Date(ev.start).toISOString().slice(0, 10) : "";
+    const [eventYear, eventMonthStr] = eventDateStr.split("-");
+
+    const matchHorse = !listQHorse || horse === listQHorse;
+    const matchType = !listQType || type === listQType.toLowerCase();
+    const matchDesc = !listQDesc || desc.includes(listQDesc.toLowerCase());
+    const matchYear = !listQYear || eventYear === listQYear;
+    const matchMonth = !listQMonth || eventMonthStr === listQMonth;
+
+    return matchHorse && matchType && matchDesc && matchYear && matchMonth;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredListEvents.length / listItemsPerPage));
+  const currentPage = Math.min(listPage, totalPages);
+  const pageStart = (currentPage - 1) * listItemsPerPage;
+  const pagedListEvents = filteredListEvents.slice(pageStart, pageStart + listItemsPerPage);
+
+  function renderListPager(position) {
+    if (filteredListEvents.length === 0) return null;
+
+    return (
+      <div className={`calPager calPager--${position}`}>
+        <button
+          type="button"
+          className="calPagerBtn"
+          onClick={() => setListPage((p) => Math.max(1, p - 1))}
+          disabled={currentPage <= 1}
+        >
+          Előző
+        </button>
+
+        <span className="calPagerInfo">
+          {currentPage} / {totalPages}
+        </span>
+
+        <button
+          type="button"
+          className="calPagerBtn"
+          onClick={() => setListPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage >= totalPages}
+        >
+          Következő
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Header />
       <main className="calendarPage">
         <h1 className="calendarTitle">Naptár</h1>
 
-        <div className="calendar">
+        <div className="calViewsPanel">
+          <h4 className="calViewsTitle">Nézetek</h4>
+          <div className="calViewsButtons">
+            <button
+              type="button"
+              className={"calViewBtn " + (viewMode === "calendar" ? "calViewBtnActive" : "")}
+              onClick={() => setViewMode("calendar")}
+            >
+              Naptár
+            </button>
+
+            <button
+              type="button"
+              className={"calViewBtn " + (viewMode === "list" ? "calViewBtnActive" : "")}
+              onClick={() => setViewMode("list")}
+            >
+              Saját tevékenységek
+            </button>
+          </div>
+        </div>
+
+        {viewMode === "calendar" ? (
+          <div className="calendar">
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             locale={huLocale}
@@ -863,7 +1008,107 @@ function Calendar() {
             eventContent={renderEventContent}
             eventClassNames={getEventClassNames}
           />
-        </div>
+          </div>
+        ) : (
+          <div className="calListPage">
+            <div className="calListControls">
+              <div className="calListSearchGrid">
+                <label>
+                  <span>Ló</span>
+                  <select value={listQHorse} onChange={(e) => setListQHorse(e.target.value)}>
+                    <option value="">— összes —</option>
+                    {horses.map((h) => (
+                      <option key={h.lo_id} value={h.nev}>
+                        {h.nev}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Típus</span>
+                  <select value={listQType} onChange={(e) => setListQType(e.target.value)}>
+                    <option value="">— összes —</option>
+                    <option value="palya">Pálya</option>
+                    <option value="patkolas">Patkolás</option>
+                    <option value="allatorvos">Állatorvos</option>
+                    <option value="verseny">Verseny</option>
+                    <option value="egyeb">Egyéb</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>Év</span>
+                  <select value={listQYear} onChange={(e) => setListQYear(e.target.value)}>
+                    <option value="">— összes —</option>
+                    {availableYears.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Hónap</span>
+                  <select value={listQMonth} onChange={(e) => setListQMonth(e.target.value)}>
+                    <option value="">— összes —</option>
+                    <option value="01">Január</option>
+                    <option value="02">Február</option>
+                    <option value="03">Március</option>
+                    <option value="04">Április</option>
+                    <option value="05">Május</option>
+                    <option value="06">Június</option>
+                    <option value="07">Július</option>
+                    <option value="08">Augusztus</option>
+                    <option value="09">Szeptember</option>
+                    <option value="10">Október</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>Leírás</span>
+                  <input
+                    placeholder="pl. fontos"
+                    value={listQDesc}
+                    onChange={(e) => setListQDesc(e.target.value)}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {listLoading && <div className="calListEmpty">Betöltés…</div>}
+            {listError && <div className="calListError">Hiba: {listError}</div>}
+
+            {!listLoading && !listError && filteredListEvents.length === 0 && (
+              <div className="calListEmpty">Nincsenek események.</div>
+            )}
+
+            <ul className="calList">
+              {pagedListEvents.map((ev) => {
+                  const p = ev.extendedProps || {};
+                  const classNames = getEventClassNames({ event: { extendedProps: p } }).join(" ");
+                  const horse = p.lo_nev || "—";
+                  const typeLabel = labelTipus(p.type || p.tipus || p.category);
+                  const description = p.raw_leiras || (p.category === "palya" ? "Pályafoglalás" : "");
+                  return (
+                    <li key={ev.id} className={`calListItem ${classNames}`}>
+                      <div className="calListItemLeft">
+                        <div className="calListItemTitle">Ló: {horse}</div>
+                        <div className="calListItemMeta">{typeLabel}</div>
+                        {description && <div className="calListItemDesc">{description}</div>}
+                      </div>
+                      <div className="calListItemRight">{toDisplayInterval(ev.start, ev.end)}</div>
+                    </li>
+                  );
+                })}
+            </ul>
+
+            {renderListPager("bottom")}
+          </div>
+        )}
 
         {modalOpen && (
           <div className="calModalOverlay" onClick={closeModal}>
